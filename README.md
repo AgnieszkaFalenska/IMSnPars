@@ -5,11 +5,11 @@ Using Bidirectional LSTM Feature Representations](https://aclweb.org/anthology/Q
 
 ## Required software
 
-```
-Python 3.7
-[Dynet 2.0](http://dynet.io/)
-[NetworkX package](https://networkx.github.io/)
-```
+> Python 3.7
+
+> [Dynet 2.0](http://dynet.io/)
+
+> [NetworkX package](https://networkx.github.io/)
 
 ## Usage
 
