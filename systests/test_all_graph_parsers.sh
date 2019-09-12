@@ -14,7 +14,7 @@ mkdir -p $OUT
 
 DEVICE="CPU"
 MODEL=$OUT/test_graph.model
-PARSER=$IMSNPARS/imsnpar/main.py
+PARSER=$IMSNPARS/imsnpars/main.py
 
 IFS=',' read -a msts <<< "CLE"
 IFS=',' read -a labelers <<< "graph-mtl,graph,trans-mtl,None"
