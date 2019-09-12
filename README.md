@@ -17,34 +17,34 @@ Using Bidirectional LSTM Feature Representations](https://aclweb.org/anthology/Q
 
 Training a new model:
 ```
-python3 src/main.py --parser TRANS --train [train_file] --save [model_file]
+python3 imsnpar/main.py --parser TRANS --train [train_file] --save [model_file]
 ```
 
 Loading and predicting with the trained model:
 ```
-python3 src/main.py --parser TRANS --model [model_file] --test  [test_file] --output [output_file]
+python3 imsnpar/main.py --parser TRANS --model [model_file] --test  [test_file] --output [output_file]
 ```
 
 The parser supports many other options. All of them can be seen after running:
 ```
-python3 src/main.py --parser TRANS --help
+python3 imsnpar/main.py --parser TRANS --help
 ```
 
 ### Graph-based parser
 
 Training a new model:
 ```
-python3 src/main.py --parser GRAPH --train [train_file] --save [model_file]
+python3 imsnpar/main.py --parser GRAPH --train [train_file] --save [model_file]
 ```
 
 Loading and predicting with the trained model:
 ```
-python3 src/main.py --parser GRAPH --model [model_file] --test  [test_file] --output [output_file]
+python3 imsnpar/main.py --parser GRAPH --model [model_file] --test  [test_file] --output [output_file]
 ```
 
 The parser supports many other options. All of them can be seen after running:
 ```
-python3 src/main.py --parser GRAPH --help
+python3 imsnpar/main.py --parser GRAPH --help
 ```
 
 ### Tests
