@@ -5,11 +5,11 @@ Using Bidirectional LSTM Feature Representations](https://aclweb.org/anthology/Q
 
 ## Required software
 
-```
-Python 3.7
-[Dynet 2.0](http://dynet.io/)
-[NetworkX package](https://networkx.github.io/)
-```
+> Python 3.7
+
+> [Dynet 2.0](http://dynet.io/)
+
+> [NetworkX package](https://networkx.github.io/)
 
 ## Usage
 
@@ -46,3 +46,13 @@ The parser supports many other options. All of them can be seen after running:
 ```
 python3 src/main.py --parser GRAPH --help
 ```
+
+### Tests
+
+*IMSnPars* comes with four testing scripts to check if everything works fine:
+1. systests/test_trans_parser.sh -- trains a new transition-based parser on small fake data and uses this model for prediction
+2. systests/test_graph_parser.sh -- trains a new graph-based parser on small fake data and uses this model for prediction
+3. systests/test_all_trans_parsers.sh -- trains multiple transition-based models with different sets of options
+4. systests/test_all_graph_parsers.sh -- trains multiple graph-based models with different sets of options
+
+We recommend running the two first scripts before using *IMSnPars* for other purposes (both tests take less than a minute). Both of the scripts should end with an information that everything went fine. Transition-based parser achieves LAS=64.61 on the fake data and the graph-based one LAS=66.47.
