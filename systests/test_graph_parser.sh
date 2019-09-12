@@ -15,7 +15,7 @@ mkdir -p $OUT
 MODEL=$OUT/test_graph.model
 DEVICE="CPU"
 
-PARSER=$IMSNPARS/src/main.py
+PARSER=$IMSNPARS/imsnpar/main.py
 
 # training
 echo "Training"

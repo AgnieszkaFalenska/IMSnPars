@@ -14,7 +14,8 @@ mkdir -p $OUT
 
 DEVICE="CPU"
 
-PARSER=$IMSNPARS/src/main.py
+
+PARSER=$IMSNPARS/imsnpar/main.py
 
 echo "Training"
 MODEL=$OUT/test_trans.model

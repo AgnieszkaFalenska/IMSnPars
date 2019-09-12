@@ -15,7 +15,7 @@ mkdir -p $OUT
 DEVICE="CPU"
 MODEL=$OUT/test_trans.model
 
-PARSER=$IMSNPARS/src/main.py
+PARSER=$IMSNPARS/imsnpar/main.py
 
 IFS=',' read -a tSystems <<< "ArcStandard,ArcHybrid,ASSwap,ArcHybridWithSwap"
 IFS=',' read -a labelers <<< "trans-mtl,graph-mtl,None,trans"
