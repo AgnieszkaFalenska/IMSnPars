@@ -23,7 +23,7 @@ def buildParserFromArgs():
     
     parserArgs = argParser.add_argument_group('parser')
     parserArgs.add_argument("--parser", help="which parser to use", choices=[ "GRAPH", "TRANS" ], required=True)
-    parserArgs.add_argument("--loglevel", help="which log level to use", required=False, default="INFO")
+    parserArgs.add_argument("--loglevel", help="which log level to use", choices=[ "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL" ], required=False, default="DEBUG")
     
     # files
     filesArgs = argParser.add_argument_group('files')
@@ -42,7 +42,7 @@ def buildParserFromArgs():
     
     # training
     trainingArgs = argParser.add_argument_group('training')
-    trainingArgs.add_argument("--patience", help="patience of the early update", type=int, required=False)
+    trainingArgs.add_argument("--patience", help="patience for the early update", type=int, required=False)
     trainingArgs.add_argument("--seed", help="random seed (different than dynet-seed)", type=int, required=False, default=42)
     trainingArgs.add_argument("--epochs", help="nr of epochs", type=int, required=False, default=30)
     

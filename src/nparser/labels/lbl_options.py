@@ -9,10 +9,10 @@ def addLabelerCmdArguments(argParser):
     lblArgs = argParser.add_argument_group('Labeler')
     
     # type of labeler
-    lblArgs.add_argument("--labeler", help="labeler", choices=[ "graph-mtl", "trans-mtl", "trans", "graph", "None" ], required=False, default="None")
+    lblArgs.add_argument("--labeler", help="which labeler to use", choices=[ "graph-mtl", "trans-mtl", "trans", "graph", "None" ], required=False, default="graph-mtl")
     
     # graph-mlt features
-    lblArgs.add_argument("--graphLabelerFeats", help="features for the graph mtl labeler", required=False, default="h,d")
+    lblArgs.add_argument("--graphLabelerFeats", help="features for the graph-mtl labeler", required=False, default="h,d")
     
 def fillLabelerOptions(args, options):
     # labeler

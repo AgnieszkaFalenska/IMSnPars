@@ -12,8 +12,8 @@ def addParserCmdArguments(argParser):
     
     # mst algorithm
     graphArgs.add_argument("--mst", help="mst algorithm", choices=[ "CLE" ], required=False, default="CLE")
-    graphArgs.add_argument("--augment", help="augment", choices=[ "True", "False" ], required=False, default="True")
-    graphArgs.add_argument("--features", help="graph features", required=False, default="h,d")
+    graphArgs.add_argument("--augment", help="augment training as described in K&G", choices=[ "True", "False" ], required=False, default="True")
+    graphArgs.add_argument("--features", help="graph features (combination of {h,d})", required=False, default="h,d")
     
 def fillParserOptions(args, options):
     options.mst = args.mst
