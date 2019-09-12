@@ -1,4 +1,4 @@
-This implementation comes from [nnpgdparser](https://github.com/zzsfornlp/nnpgdparser). It needed small changes to be adjusted it to Cython.
+This implementation comes from [nnpgdparser](https://github.com/zzsfornlp/nnpgdparser). It needed small changes to be adjusted to Cython.
 
 ### Compile:
 > python3 setup.py build_ext --inplace
