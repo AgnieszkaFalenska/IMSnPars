@@ -9,7 +9,7 @@ source $D/../scripts/get_global_vars.sh
 TRAIN=`readlink -ev $D/test_data/train_small.conllu`
 DEV=`readlink -ev $D/test_data/dev_small.conllu`
 
-OUT=$D/out
+OUT=$D/out-graph
 mkdir -p $OUT
 
 DEVICE="CPU"
@@ -17,7 +17,7 @@ MODEL=$OUT/test_graph.model
 PARSER=$IMSNPARS/imsnpars/main.py
 
 IFS=',' read -a msts <<< "CLE"
-IFS=',' read -a labelers <<< "graph-mtl,graph,trans-mtl,None"
+IFS=',' read -a labelers <<< "graph-mtl,graph,None"
 IFS=',' read -a contexts <<< "bilstm,concat"
 IFS='|' read -a feats <<< "h,d,h+1,d-1,dist|h,d|h,d,dist|h+1,d|h,d+1"
 IFS='|' read -a representations <<< "word,char|word,pos|word,morph"

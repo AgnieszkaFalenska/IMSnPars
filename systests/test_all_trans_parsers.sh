@@ -9,7 +9,7 @@ source $D/../scripts/get_global_vars.sh
 TRAIN=`readlink -ev $D/test_data/train_small.conllu`
 DEV=`readlink -ev $D/test_data/dev_small.conllu`
 
-OUT=$D/out
+OUT=$D/out-trans
 mkdir -p $OUT
 
 DEVICE="CPU"
@@ -18,7 +18,7 @@ MODEL=$OUT/test_trans.model
 PARSER=$IMSNPARS/imsnpars/main.py
 
 IFS=',' read -a tSystems <<< "ArcStandard,ArcHybrid,ASSwap,ArcHybridWithSwap"
-IFS=',' read -a labelers <<< "trans-mtl,graph-mtl,None,trans"
+IFS=',' read -a labelers <<< "graph-mtl,None,trans"
 IFS=',' read -a contexts <<< "bilstm,concat"
 IFS='|' read -a representations <<< "word,char|word,pos|word,morph"
 IFS='|' read -a features <<< "s0,s1|b0,s1rmc|s2,s1rmc_rmc"

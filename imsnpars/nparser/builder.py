@@ -76,7 +76,7 @@ def __buildContextReprBuilder(opts, tokenBuilder):
         vecBuilder = tokenBuilder
     else:
         logging.error("Unknown context representation: " + opts.contextRepr)
-        sys.exit(-1)
+        sys.exit()
         
     return vecBuilder
         
@@ -136,8 +136,6 @@ def __buildTrainer(opts):
 def __buildLabeler(labeler, parser, opts, dummyBuilder, reprBuilder, parsingTask):
     if labeler == "graph-mtl":
         lblTask = lbuilder.buildGraphLabeler(opts, dummyBuilder, reprBuilder)
-    elif labeler == "trans-mtl":
-        lblTask = lbuilder.buildTransLabeler(opts, dummyBuilder, reprBuilder)
     elif parser == "TRANS" and labeler == "trans":
         lblTask = ltask.DummyLabeler(parsingTask.getTransLabeler())
     elif labeler == None or not labeler or labeler == "None":

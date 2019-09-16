@@ -35,11 +35,11 @@ def _buildOracleAndTransSystem(opts):
 def _buildOracle(opts, tsystem, transLabeler):
     if opts.system != "ArcHybrid" and opts.oracle == "dynamic":
         logging.error("No dynamic oracle implemented for %s" % opts.system)
-        sys.exit(-1)
+        sys.exit()
         
     elif opts.system != "ASSwap" and opts.oracle in [ "lazy", "eager" ]:
         logging.error("Oracle %s implemented only for system 'ASSwap'" % opts.oracle)
-        sys.exit(-1)
+        sys.exit()
      
     if opts.oracle == "dynamic":
         if opts.aggresive:
@@ -62,7 +62,7 @@ def _buildOracle(opts, tsystem, transLabeler):
         anoracle = ahswap.ArcHybridWithSwapStaticOracle(tsystem, labeler=transLabeler)
     else:
         logging.error("This setting is not known: oracle=%s, system=%s" % (opts.oracle, opts.system))
-        sys.exit(-1)
+        sys.exit()
         
     return anoracle
         
@@ -77,7 +77,7 @@ def _buildTransSystem(opts):
         return ahswap.ArcHybridWithSwap()
     else:
         logging.error("Unknown transition system: %s" % opts.system)
-        sys.exit(-1)
+        sys.exit()
    
 allFeatIds = { "s0": tfeatures.FeatId.S0,
                 "s1" : tfeatures.FeatId.S1,
