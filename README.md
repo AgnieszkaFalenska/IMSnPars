@@ -3,6 +3,24 @@
 IMS Neural Dependency Parser is a re-implementation of the transition- and graph-based parsers described in [Simple and Accurate Dependency Parsing
 Using Bidirectional LSTM Feature Representations](https://aclweb.org/anthology/Q16-1023)
 
+The parser was developed for the paper [The (Non-)Utility of Structural Features in BiLSTM-based
+Dependency Parsers](https://www.aclweb.org/anthology/P19-1012) (see [acl2019 branch](https://github.com/AgnieszkaFalenska/IMSnPars/tree/acl2019) for all the paper specific changes and analysis tools):
+
+```
+@inproceedings{falenska-kuhn-2019-non,
+    title = "The (Non-)Utility of Structural Features in {B}i{LSTM}-based Dependency Parsers",
+    author = "Falenska, Agnieszka  and Kuhn, Jonas",
+    booktitle = "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics",
+    month = jul,
+    year = "2019",
+    address = "Florence, Italy",
+    publisher = "Association for Computational Linguistics",
+    url = "https://www.aclweb.org/anthology/P19-1012",
+    doi = "10.18653/v1/P19-1012",
+    pages = "117--128",
+}
+```
+
 ## Required software
 
 > Python 3.7
