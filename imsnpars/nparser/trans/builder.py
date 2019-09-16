@@ -9,6 +9,7 @@ import sys
 
 import nparser.network
 import nparser.features
+from nparser.analysis import drop
 import nparser.trans.features as tfeatures
 from nparser.trans import task, labeler
 from nparser.trans.tsystem import asswap, arcstandard, archybrid, ahswap, oracle
@@ -35,11 +36,11 @@ def _buildOracleAndTransSystem(opts):
 def _buildOracle(opts, tsystem, transLabeler):
     if opts.system != "ArcHybrid" and opts.oracle == "dynamic":
         logging.error("No dynamic oracle implemented for %s" % opts.system)
-        sys.exit(-1)
+        sys.exit()
         
     elif opts.system != "ASSwap" and opts.oracle in [ "lazy", "eager" ]:
         logging.error("Oracle %s implemented only for system 'ASSwap'" % opts.oracle)
-        sys.exit(-1)
+        sys.exit()
      
     if opts.oracle == "dynamic":
         if opts.aggresive:
@@ -62,7 +63,7 @@ def _buildOracle(opts, tsystem, transLabeler):
         anoracle = ahswap.ArcHybridWithSwapStaticOracle(tsystem, labeler=transLabeler)
     else:
         logging.error("This setting is not known: oracle=%s, system=%s" % (opts.oracle, opts.system))
-        sys.exit(-1)
+        sys.exit()
         
     return anoracle
         
@@ -77,7 +78,7 @@ def _buildTransSystem(opts):
         return ahswap.ArcHybridWithSwap()
     else:
         logging.error("Unknown transition system: %s" % opts.system)
-        sys.exit(-1)
+        sys.exit()
    
 allFeatIds = { "s0": tfeatures.FeatId.S0,
                 "s1" : tfeatures.FeatId.S1,
@@ -114,7 +115,7 @@ def _buildFeatureExtractor(featuresD):
     extractor = tfeatures.TransFeatureExtractor(stateExtractors)
     return extractor
 
-def buildTransParser(opts, dummyBuilder, reprBuilder):
+def buildTransParser(opts, dummyBuilder, reprBuilder, dropContext = None):
     tsystem, anoracle = _buildOracleAndTransSystem(opts)
     transExtractor = _buildFeatureExtractor(opts.features)
     
@@ -122,5 +123,10 @@ def buildTransParser(opts, dummyBuilder, reprBuilder):
     transNetwork = nparser.network.ParserNetwork(opts.mlpHiddenDim, opts.nonLinFun, featIds)
     featBuilder = nparser.features.FeatReprBuilder(transExtractor, { }, dummyBuilder, transNetwork, opts.parseLayer)
     
-    parsingTask = task.NNTransParsingTask(tsystem, anoracle, transNetwork, featBuilder)
+    if dropContext:
+        logging.info("Building NNTransParsingTaskWithDrop with dropContext=%s" % dropContext)
+        parsingTask = drop.NNTransParsingTaskWithDrop(tsystem, anoracle, transNetwork, featBuilder, dropContext, reprBuilder)
+    else:
+        parsingTask = task.NNTransParsingTask(tsystem, anoracle, transNetwork, featBuilder)
+        
     return parsingTask

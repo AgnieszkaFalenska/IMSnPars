@@ -16,6 +16,7 @@ def addCommonParserCmdArguments(argParser):
     # word representations
     reprArgs = argParser.add_argument_group('Token representations')
     reprArgs.add_argument("--contextRepr", help="context representation", choices=[ "bilstm", "concat" ], required=False, default="bilstm")
+    reprArgs.add_argument("--dropContext", help="feature to drop from the context (for analysis)", required=False, default=None)
     reprArgs.add_argument("--dummy", help="which dummy repr to use", choices=[ "zero", "random", "random_sep" ], required=False, default="random")
     reprArgs.add_argument("--representations", help="which representations to use, select a subset of [word|pos|char|morph], use ',' separator", required=False, default="word,pos,char")
     
@@ -91,6 +92,7 @@ def fillCommonParserOptions(args, opts):
     opts.dummy = args.dummy
     opts.representations = args.representations.split(",")
     opts.contextRepr = args.contextRepr
+    opts.dropContext = args.dropContext
     return opts
 
 def fillParserOptions(args, opts):

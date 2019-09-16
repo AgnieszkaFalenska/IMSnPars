@@ -17,7 +17,9 @@ class FeatId(IntEnum):
     DEP_P_2 = 8
     DEP_M_1 = 9
     DEP_M_2 = 10
-    DIST = 11
+    SIBL = 11
+    GRAND = 12
+    DIST = 13
     
 class TokenFeatExtractor(object):
     def __init__(self):

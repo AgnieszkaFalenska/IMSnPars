@@ -25,6 +25,18 @@ class NNTransParsingTask(NNTreeTask):
     def getTransLabeler(self):
         return self.__tsystem
     
+    def getTransitionSystem(self):
+        return self.__tsystem
+    
+    def getFeatReprBuilder(self):
+        return self.__featReprBuilder
+    
+    def getNetwork(self):
+        return self.__network
+    
+    def getOracle(self):
+        return self.__oracle
+    
     def renewNetwork(self):
         self.__network.renewNetwork()
                            
@@ -67,7 +79,7 @@ class NNTransParsingTask(NNTreeTask):
             
         if predictTrain:
             predState = self.__tsystem.initialState(len(instance.sentence))
-            self.__continueUntilFinal(vectors, predState, cache)
+            self._continueUntilFinal(vectors, predState, cache)
             predictedTree = predState.arcs.buildTree()
         else:
             predictedTree = None
@@ -78,10 +90,10 @@ class NNTransParsingTask(NNTreeTask):
         state = self.__tsystem.initialState(len(instance.sentence))
         
         cache = nparser.features.FeatOutputCache()
-        self.__continueUntilFinal(vectors, state, cache)
+        self._continueUntilFinal(vectors, state, cache)
         return state.arcs.buildTree()
     
-    def __continueUntilFinal(self, vectors, state, cache):
+    def _continueUntilFinal(self, vectors, state, cache):
         while not self.__tsystem.isFinal(state):
             featReprs = self.__featReprBuilder.extractAllAndBuildFeatRepr(state, cache, vectors, isTraining=False)
             netOut = self.__network.buildOutput(dynet.esum(featReprs), isTraining=False)

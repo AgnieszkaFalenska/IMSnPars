@@ -9,7 +9,7 @@ source $D/../scripts/get_global_vars.sh
 TRAIN=`readlink -ev $D/test_data/train_small.conllu`
 DEV=`readlink -ev $D/test_data/dev_small.conllu`
 
-OUT=$D/out
+OUT=$D/out-trans
 mkdir -p $OUT
 
 DEVICE="CPU"

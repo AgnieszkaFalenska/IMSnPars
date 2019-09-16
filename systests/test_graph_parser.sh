@@ -9,7 +9,7 @@ source $D/../scripts/get_global_vars.sh
 TRAIN=`readlink -ev $D/test_data/train.conllu`
 DEV=`readlink -ev $D/test_data/dev.conllu`
 
-OUT=$D/out
+OUT=$D/out-graph
 mkdir -p $OUT
 
 MODEL=$OUT/test_graph.model
@@ -25,6 +25,7 @@ $PYTHON $PARSER \
         --seed $PARS_SEED \
         --loglevel DEBUG \
         --parser GRAPH \
+        --mst EisnerO2g \
         --train $TRAIN \
     	--save $MODEL \
     	--dev $DEV \
@@ -33,6 +34,7 @@ $PYTHON $PARSER \
     	--test $DEV \
 		--contextRepr bilstm \
         --representations word,pos \
+        --features h,d,g \
         --labeler "graph-mtl" \
         --output $MODEL.train.out
     	

@@ -134,6 +134,6 @@ if __name__ == '__main__':
         if args.output == None:
             lazyEval = evaluator.LazyTreeEvaluator()
             parser.predict(testData, lazyEval)
-            logging.info("Test acc: %f %f" % (lazyEval.calcUAS(), lazyEval.calcLAS()))
+            logging.info("Test UAS=%.2f Test LAS=%.2f" % (lazyEval.calcUAS(), lazyEval.calcLAS()))
         else:
             parser.predict(testData, utils.LazySentenceWriter(open(args.output, "w")))

@@ -18,6 +18,18 @@ class NNGraphParsingTask(neural.NNTreeTask):
         self.__augmentScore = augmentScore
         self.__logger = logging.getLogger(self.__class__.__name__)
     
+    def getMSTAlg(self):
+        return self.__mst
+    
+    def getDecoder(self):
+        return self.__decoder
+    
+    def getFeatReprBuilder(self):
+        return self.__featReprBuilder
+    
+    def getNetwork(self):
+        return self.__network
+        
     def handlesNonProjectiveTrees(self):
         return True
     

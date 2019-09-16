@@ -9,7 +9,7 @@ source $D/../scripts/get_global_vars.sh
 TRAIN=`readlink -ev $D/test_data/train.conllu`
 DEV=`readlink -ev $D/test_data/dev.conllu`
 
-OUT=$D/out
+OUT=$D/out-trans
 mkdir -p $OUT
 
 DEVICE="CPU"
@@ -35,7 +35,7 @@ $PYTHON -u $PARSER \
         --contextRepr bilstm \
 		--features s0,s1,b0 \
 		--labeler trans \
-		--output $MODEL.train.out #| tee $MODEL.log
+		--output $MODEL.train.out
 
 echo "Predicting 1"
 $PYTHON $PARSER \
@@ -45,8 +45,6 @@ $PYTHON $PARSER \
         --parser TRANS \
         --format conllu \
     	--test $DEV \
-    	--representations word,pos \
-    	--contextRepr bilstm \
     	--output $MODEL.predict.out
     	
 echo "Predicting 2"
@@ -57,9 +55,6 @@ $PYTHON $PARSER \
         --parser TRANS \
         --format conllu \
     	--test $DEV \
-    	--representations word,pos \
-    	--contextRepr bilstm \
-    	--labeler trans-mtl \
     	--output $MODEL.predict.out.2
 #    	
 echo "Comparing"

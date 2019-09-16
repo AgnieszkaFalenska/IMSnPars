@@ -10,7 +10,8 @@ import sys
 
 from tools import utils
 from repr import word, sentence
-    
+
+from nparser.analysis import drop
 from nparser.task import NDependencyParser
 from nparser.features import ZeroDummyVectorBuilder, RandomDummyVectorBuilder
 
@@ -30,11 +31,11 @@ def buildParser(opts):
     trainer = __buildTrainer(opts)
     
     if opts.parser == "TRANS":
-        parsingTask = tbuilder.buildTransParser(opts, dummyBuilder, reprBuilder)
+        parsingTask = tbuilder.buildTransParser(opts, dummyBuilder, reprBuilder, dropContext = opts.dropContext)
         lblTask = __buildLabeler(opts.labeler, opts.parser, opts, dummyBuilder, reprBuilder, parsingTask)
         
     elif opts.parser == "GRAPH":
-        parsingTask = gbuilder.buildGraphParser(opts, dummyBuilder, reprBuilder)
+        parsingTask = gbuilder.buildGraphParser(opts, dummyBuilder, reprBuilder, dropContext = opts.dropContext)
         lblTask = __buildLabeler(opts.labeler, opts.parser, opts, dummyBuilder, reprBuilder, parsingTask)
         
     else:
@@ -70,13 +71,18 @@ def __buildContextReprBuilder(opts, tokenBuilder):
     if opts.contextRepr == "bilstm":
         lstmDropout = str(round(opts.lstmDropout, 2)) if opts.lstmDropout else "None"
         logging.info("Building BiLSTMReprBuilder with lstmDim=%i, lstmLayers=%i, lstmDropout=%s" % (opts.lstmDim, opts.lstmLayers, lstmDropout))
-        vecBuilder = sentence.BiLSTReprBuilder(tokenBuilder, opts.lstmDim, opts.lstmLayers, lstmDropout=opts.lstmDropout)
+        
+        if opts.dropContext:
+            vecBuilder = drop.BiLSTReprBuilderWithDrop(tokenBuilder, opts.lstmDim, opts.lstmLayers, lstmDropout=opts.lstmDropout)
+        else:
+            vecBuilder = sentence.BiLSTReprBuilder(tokenBuilder, opts.lstmDim, opts.lstmLayers, lstmDropout=opts.lstmDropout)
+            
     elif opts.contextRepr == "concat":
         logging.info("Building ConcatReprBuilder")
         vecBuilder = tokenBuilder
     else:
         logging.error("Unknown context representation: " + opts.contextRepr)
-        sys.exit(-1)
+        sys.exit()
         
     return vecBuilder
         
@@ -110,6 +116,8 @@ def __buildReprBuilder(opts):
     contextReprBuilder = __buildContextReprBuilder(opts, tokenBuilder)
         
     dummyBuilder = __buildDummyReprBuilder(opts, sum([ rd.getDim() for rd in reprBuilders ]), contextReprBuilder.getDim())
+    
+    logging.info("Using context builder: %s" % type(contextReprBuilder))
     logging.info("Using dummy builder: %s" % type(dummyBuilder))
     return contextReprBuilder, dummyBuilder
 
@@ -136,14 +144,16 @@ def __buildTrainer(opts):
 def __buildLabeler(labeler, parser, opts, dummyBuilder, reprBuilder, parsingTask):
     if labeler == "graph-mtl":
         lblTask = lbuilder.buildGraphLabeler(opts, dummyBuilder, reprBuilder)
-    elif labeler == "trans-mtl":
-        lblTask = lbuilder.buildTransLabeler(opts, dummyBuilder, reprBuilder)
     elif parser == "TRANS" and labeler == "trans":
         lblTask = ltask.DummyLabeler(parsingTask.getTransLabeler())
     elif labeler == None or not labeler or labeler == "None":
         logging.info("Building DummyLabeler")
         lblTask = ltask.DummyLabeler()
     elif parser == "GRAPH" and labeler == "graph":
+        if opts.mst == "EisnerO2sib" or opts.mst == "EisnerO2g":
+            logging.error("'graph' labeler is not available for %s" % opts.mst)
+            sys.exit()
+        
         lblTask = ltask.DummyLabeler(parsingTask.getLblDict())
     else:
         logging.error("Unknown labeler: %s for parser %s" % (labeler, parser))

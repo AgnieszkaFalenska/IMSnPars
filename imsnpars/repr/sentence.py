@@ -171,21 +171,21 @@ class BiLSTReprBuilder(SentenceReprBuilder):
         return 2 * self.__lstmDim
     
     def prepareVectors(self, instance, isTraining):
+        embeds = self.prepareEmbeddingsForLSTM(instance, isTraining)
+        return self.applyLSTMToEmbeds(embeds, isTraining)
+    
+    def prepareEmbeddingsForLSTM(self, instance, isTraining):
         vectors = self.__tokBuilder.prepareVectors(instance, isTraining)
-        inputReprs = [ self.__applyNoise(vectors.rootV, isTraining) ]
-        inputReprs += [ self.__applyNoise(v, isTraining) for v in vectors.wordsV ]
-        
-        self.__setDropout(isTraining)
-        
-        # first layer:
-        lstmLayers = [ None ] * self.__lstmLayers
-        lstmLayers[0] = self.__runThroughBiLstm(inputReprs, self.__forwardLstms[0], self.__backwardLstms[0], isTraining)
-        
-        for i in range(1, self.__lstmLayers):
-            lstmLayers[i] = self.__runThroughBiLstm(lstmLayers[i-1], self.__forwardLstms[i], self.__backwardLstms[i], isTraining)
+        rootRepr = self.__applyNoise(vectors.rootV, isTraining)
+        wordRepr = [ self.__applyNoise(v, isTraining) for v in vectors.wordsV ]
+        return VectorManager(wordRepr, rootRepr)
+    
+    def applyLSTMToEmbeds(self, embeds, isTraining):
+        inputReprs = [ embeds.rootV ] +  embeds.wordsV
+        lstmLayers = self._buildLSTMLayers(inputReprs, isTraining)
         
         wordVs = [ ]
-        for i in range(len(instance.sentence)):
+        for i in range(len(inputReprs) - 1):
             wordVs.append([ lstm[i+1] for lstm in lstmLayers ])
             
         rootV =  [ lstm[0] for lstm in lstmLayers ]
@@ -193,14 +193,19 @@ class BiLSTReprBuilder(SentenceReprBuilder):
         result = VectorManager(wordVs, rootV)
         return result
     
-    def __runThroughBiLstm(self, vectors, forwardLstm, backwardLstm, isTraining):
-        if isTraining and self.__dropout:
-            forwardLstm.set_dropout(self.__dropout)
-            backwardLstm.set_dropout(self.__dropout)
-        elif self.__dropout:
-            forwardLstm.set_dropout(0)
-            backwardLstm.set_dropout(0)
+    def _buildLSTMLayers(self, inputs, isTraining):
+        self.__setDropout(isTraining)
+        
+        # first layer:
+        lstmLayers = [ None ] * self.__lstmLayers
+        lstmLayers[0] = self.__runThroughBiLstm(inputs, self.__forwardLstms[0], self.__backwardLstms[0])
+        
+        for i in range(1, self.__lstmLayers):
+            lstmLayers[i] = self.__runThroughBiLstm(lstmLayers[i-1], self.__forwardLstms[i], self.__backwardLstms[i])
+            
+        return lstmLayers 
     
+    def __runThroughBiLstm(self, vectors, forwardLstm, backwardLstm):
         forwardInit = forwardLstm.initial_state()
         backwardInit = backwardLstm.initial_state()
         

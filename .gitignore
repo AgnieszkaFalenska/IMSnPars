@@ -104,3 +104,12 @@ venv.bak/
 .mypy_cache/
 ./.project
 ./.pydevproject
+imsnpars/nparser/graph/mst/algorithms/cyEisner.cpp
+imsnpars/nparser/graph/mst/algorithms/cyEisnerO2g.cpp
+imsnpars/nparser/graph/mst/algorithms/cyEisnerO2sib.cpp
+systests/out-graph/
+systests/out-trans/
+systests/out
+.project
+.pydevproject
+.settings/
