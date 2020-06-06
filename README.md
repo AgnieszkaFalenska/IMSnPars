@@ -8,5 +8,5 @@ Dependency Parsers](https://www.aclweb.org/anthology/P19-1012) (see [acl2019 bra
 Later, it was changed and used in the paper [Integrating Graph-Based and Transition-Based Dependency Parsers
 in the Deep Contextualized Era](https://iwpt20.sigparse.org/pdf/2020.iwpt-1.4.pdf) 
 
-This branch **WILL CONTAIN** all the paper-specific changes and analysis tools. I just have to clean them a little bit before I put them here. Please contact me if you are not scared and want to see the dirty and ugly version of the code earlier.
+This branch **WILL CONTAIN** all the paper-specific changes and analysis tools. I just have to clean the code before I put it here. Please contact me if you are not scared and want to see the dirty and ugly version earlier.
 
