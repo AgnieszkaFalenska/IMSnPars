@@ -28,7 +28,8 @@ def buildParserFromArgs():
     filesArgs.add_argument("--test", help="test file", type=str, required=False)
     filesArgs.add_argument("--output", help="output predictions to the file", type=str, required=False)
     filesArgs.add_argument("--save", help="save model to the file", type=str, required=False)
-    filesArgs.add_argument("--save_max", help="save the best model to the file", type=str, required=False)
+    filesArgs.add_argument("--saveMax", help="save the best model to the file", type=str, required=False)
+    filesArgs.add_argument("--reportTrain", help="reports training accuracy", type=str, required=False)
     
     # format
     formatArgs = argParser.add_argument_group('format')
@@ -108,17 +109,17 @@ if __name__ == '__main__':
         
     trainData, devData, testData = prepareDatasets(args, opts)
     if args.train:
-        if args.save == None and args.save_max == None:
+        if args.save == None and args.saveMax == None:
             logging.warn("Training without save option")
         
         if args.patience:
             trainer = training.EarlyStopTrainingManager(args.epochs, lambda : parser.save(args.save), patience = args.patience)
-        elif args.save_max != None:
-            trainer = training.SaveMaxTrainingManager(args.epochs, lambda : parser.save(args.save), lambda : parser.save(args.save_max))
+        elif args.saveMax != None:
+            trainer = training.SaveMaxTrainingManager(args.epochs, lambda : parser.save(args.save), lambda : parser.save(args.saveMax))
         else:
             trainer = training.AllEpochsTrainingManager(args.epochs, lambda : parser.save(args.save))
             
-        parser.train(trainData, trainer, devData)
+        parser.train(trainData, trainer, devData, predictTrain=args.reportTrain)
         
         # because of early update we need to load the best model
         if args.patience and args.test != None and args.save != None:
@@ -134,6 +135,6 @@ if __name__ == '__main__':
         if args.output == None:
             lazyEval = evaluator.LazyTreeEvaluator()
             parser.predict(testData, lazyEval)
-            logging.info("Test acc: %f %f" % (lazyEval.calcUAS(), lazyEval.calcLAS()))
+            logging.info("Test UAS=%.2f Test LAS=%.2f" % (lazyEval.calcUAS(), lazyEval.calcLAS()))
         else:
             parser.predict(testData, utils.LazySentenceWriter(open(args.output, "w")))

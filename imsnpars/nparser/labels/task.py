@@ -62,7 +62,7 @@ class LabelerGraphTask(neural.NNTreeTask):
     def renewNetwork(self):
         self.__network.renewNetwork()
     
-    def buildLosses(self, vectors, instance, currentEpoch, predictTrain = True):
+    def buildLosses(self, vectors, instance, currentEpoch, predictTrain):
         outputsLbls = self.__buildLblOutputs(instance, instance.correctTree, vectors, isTraining=True)
         correctLbls = [ self.__lbls.getLblId(instance.correctTree.getLabel(tokPos)) for tokPos in range(instance.correctTree.nrOfTokens()) ]
         losses = self.__buildBestLosses(outputsLbls, correctLbls)
@@ -147,7 +147,7 @@ class DummyLabeler(neural.NNTreeTask):
     def renewNetwork(self):
         pass
         
-    def buildLosses(self, vectors, instance, currentEpoch, predictTrain = False):
+    def buildLosses(self, vectors, instance, currentEpoch, predictTrain):
         return [ ], None
     
     def predict(self, instance, tree, vectors):

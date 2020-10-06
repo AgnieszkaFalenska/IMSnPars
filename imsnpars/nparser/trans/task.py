@@ -31,7 +31,7 @@ class NNTransParsingTask(NNTreeTask):
     def handlesNonProjectiveTrees(self):
         return self.__oracle.handlesNonProjectiveTrees()
     
-    def buildLosses(self, vectors, instance, currentEpoch, predictTrain = True):
+    def buildLosses(self, vectors, instance, currentEpoch, predictTrain):
         result = [ ]
        
         state = self.__tsystem.initialState(len(instance.sentence))

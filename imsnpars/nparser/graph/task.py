@@ -28,7 +28,7 @@ class NNGraphParsingTask(neural.NNTreeTask):
     def renewNetwork(self):
         self.__network.renewNetwork()
         
-    def buildLosses(self, vectors, instance, currentEpoch, predictTrain = True):
+    def buildLosses(self, vectors, instance, currentEpoch, predictTrain):
         scores = self.__mst.emptyScores(instance) 
         self.__decoder.calculateScores(instance, vectors, self.__network, scores, isTraining=True)
         
@@ -85,7 +85,7 @@ class NNGraphParsingTaskWithLbl(neural.NNTreeTask):
     def renewNetwork(self):
         self.__network.renewNetwork()
         
-    def buildLosses(self, vectors, instance, currentEpoch, predictTrain = True):    
+    def buildLosses(self, vectors, instance, currentEpoch, predictTrain):    
         scores = self.__mst.emptyScores(instance)
         self.__decoder.calculateScores(instance, vectors, self.__network, scores, isTraining=True)
         
