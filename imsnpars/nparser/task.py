@@ -113,18 +113,7 @@ class NDependencyParser(object):
     def getParsingTask(self):
         return self.__parser
     
-    def continueTraining(self, allSentences, trainManager, epochsDone, devData = None, lossBatchSize=0, predictEvery = 20):
-        if not self.__parser.handlesNonProjectiveTrees():    
-            sentences = utils.filterNonProjective(allSentences)
-            self.__logger.info("Filtered %i non-projective trees " % (len(allSentences) - len(sentences)))
-        else:
-            sentences = allSentences
-        
-        # for logging
-        trainLogger = NNParserTrainLogger(epochsDone)
-        self.__trainOnSentences(sentences, devData, trainManager, trainLogger, lossBatchSize)
-        
-    def train(self, allSentences, trainManager, devData = None, batchSize=0, predictEvery = 20):
+    def train(self, allSentences, trainManager, devData = None, batchSize=0):
         if not self.__parser.handlesNonProjectiveTrees():    
             sentences = utils.filterNonProjective(allSentences)
             self.__logger.info("Filtered %i non-projective trees " % (len(allSentences) - len(sentences)))
@@ -146,10 +135,10 @@ class NDependencyParser(object):
     
     def predict(self, sentences, writer):
         startTime = datetime.datetime.now()
-        for i, sent in enumerate(sentences):
+        for sent in sentences:
             self.__renewNetwork()
             instance = self.__reprBuilder.buildInstance(sent)
-            predictedTree = self.__predict_tree(instance)
+            predictedTree = self.__predictTree(instance)
             writer.processTree(sent, predictedTree)
             
         endTime = datetime.datetime.now()
@@ -173,7 +162,7 @@ class NDependencyParser(object):
             # one batch of losses
             losses = [ ]
             
-            for iId, instance in enumerate(instances):
+            for instance in instances:
                 vectors = self.__reprBuilder.prepareVectors(instance, isTraining=True)
                 
                 predictTrain = True
@@ -201,7 +190,6 @@ class NDependencyParser(object):
                     losses = [ ]
                     self.__renewNetwork()
         
-                #predictedTree = self.__predict_tree(instance)
                 trainLogger.finishSentence(instance.sentence, predictTree, losses)
             
             if len(losses) > 0:        
@@ -226,7 +214,7 @@ class NDependencyParser(object):
             
         trainManager.finishTraining()
         
-    def __predict_tree(self, instance):
+    def __predictTree(self, instance):
         vectors = self.__reprBuilder.prepareVectors(instance, isTraining=False)
         predictTree = self.__parser.predict(instance, vectors)
         lbls = self.__labeler.predict(instance, predictTree, vectors)
