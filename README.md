@@ -1,27 +1,9 @@
-# IMSnPars
+# IMSnPars at IWPT2020
 
 IMS Neural Dependency Parser is a re-implementation of the transition- and graph-based parsers described in [Simple and Accurate Dependency Parsing
 Using Bidirectional LSTM Feature Representations](https://aclweb.org/anthology/Q16-1023)
 
-The parser was developed for the paper [The (Non-)Utility of Structural Features in BiLSTM-based
-Dependency Parsers](https://www.aclweb.org/anthology/P19-1012) (see [acl2019 branch](https://github.com/AgnieszkaFalenska/IMSnPars/tree/acl2019) for all the paper specific changes and analysis tools):
-
-```
-@inproceedings{falenska-kuhn-2019-non,
-    title = "The (Non-)Utility of Structural Features in {B}i{LSTM}-based Dependency Parsers",
-    author = "Falenska, Agnieszka  and Kuhn, Jonas",
-    booktitle = "Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics",
-    month = jul,
-    year = "2019",
-    address = "Florence, Italy",
-    publisher = "Association for Computational Linguistics",
-    url = "https://www.aclweb.org/anthology/P19-1012",
-    doi = "10.18653/v1/P19-1012",
-    pages = "117--128",
-}
-```
-
-Later it was extended with multi-task training for the paper [Integrating Graph-Based and Transition-Based Dependency Parsers in the Deep Contextualized Era](https://www.aclweb.org/anthology/2020.iwpt-1.4.pdf) (see [iwpt2020 branch](https://github.com/AgnieszkaFalenska/IMSnPars/tree/iwpt2020) for all the paper specific changes and analysis tools):
+This version of the parser was developed for the paper [Integrating Graph-Based and Transition-Based Dependency Parsers in the Deep Contextualized Era](https://www.aclweb.org/anthology/2020.iwpt-1.4.pdf). The branch contains all the specific changes and analysis tools.
 
 ```
 @inproceedings{falenska-etal-2020-integrating,
@@ -94,3 +76,10 @@ python3 imsnpars/main.py --parser GRAPH --help
 
 
 We recommend running the four first scripts before using *IMSnPars* for other purposes (all tests take less than a minute). All of the scripts should end with an information that everything went fine. For the first two tests: transition-based parser achieves LAS=64.61 on the fake data and the graph-based one LAS=66.47.
+
+### Branch Specific Tests
+
+The *iwpt2020* branch comes with three additional testing scripts to check if everything works fine:
+1. systests/test_mtl_parser.sh -- trains a new parser on small fake data and uses it for prediction. The parser is built from two models -- graph-based and transition-based -- that share intermediate representations.
+2. systests/test_stag_parser.sh -- trains two parsers -- graph-based and transition-based -- with additional supertag features
+3. systests/test_all_mtl_parsers.sh -- trains multiple MTL models with different sets of options
