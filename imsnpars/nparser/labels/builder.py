@@ -24,7 +24,7 @@ def buildGraphLabeler(opts, dummyBuilder, reprBuilder):
     featIds = extractor.getFeatIds() + [ feat.getFeatId() for feat in featBuilders.values() ]
     
     # all network's parameters
-    lblNetwork = nparser.network.ParserNetwork(opts.mlpHiddenDim, opts.nonLinFun, featIds)
+    lblNetwork = nparser.network.ParserNetwork(opts.mlpHiddenLblDim, opts.nonLinFun, featIds, opts.trainMargin)
     featBuilder = nparser.features.FeatReprBuilder(extractor, featBuilders, dummyBuilder, lblNetwork, opts.lblLayer)
     labelerTask = ltask.LabelerGraphTask(featBuilder, lblNetwork, opts.lblLayer)
     return labelerTask

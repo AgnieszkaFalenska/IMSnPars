@@ -12,22 +12,27 @@ import datetime
 from tools import datatypes, utils, evaluator
        
 class NNParserTrainLogger(object):
-    """Class cumulates all the logging, tracking, and printing of the parser"""
+    """Class accumulates all the logging, tracking, and printing of the parser"""
     
-    def __init__(self, epoch=0):
-        self.trainEval = evaluator.LazyTreeEvaluator()
+    def __init__(self, reportTrain):
         
-        self.epochNr = epoch
+        if reportTrain:
+            self.trainEval = evaluator.LazyTreeEvaluator()
+        else:
+            self.trainEval = None
+        
+        self.epochNr = 0
         self.__reset()
         self.__logger = logging.getLogger(self.__class__.__name__)
         
     def finishEpoch(self, uas = None, las = None):
-        if uas != None and las != None:
+        if uas is not None and las is not None:
             self.__logger.debug("Epoch %i, UAS=%.2f LAS=%.2f" % ( self.epochNr, uas, las))
         
-        trainLAS = self.trainEval.calcLAS()
-        trainUAS = self.trainEval.calcUAS()
-        self.__logger.debug("Epoch %i, Train UAS=%.2f Train LAS=%.2f" % ( self.epochNr, trainUAS, trainLAS))
+        if self.trainEval:
+            trainLAS = self.trainEval.calcLAS()
+            trainUAS = self.trainEval.calcUAS()
+            self.__logger.debug("Epoch %i, Train UAS=%.2f Train LAS=%.2f" % ( self.epochNr, trainUAS, trainLAS))
         
         self.__reset()
         self.epochNr += 1
@@ -40,7 +45,7 @@ class NNParserTrainLogger(object):
         self.iNrOfUpdates += nrOfUpdates 
           
     def finishSentence(self, sentence, predictedTree, lossesAfterUpdate):
-        if predictedTree != None:
+        if self.trainEval:
             self.trainEval.processTree(sentence, predictedTree)
          
         self.seenSentences += 1
@@ -48,24 +53,31 @@ class NNParserTrainLogger(object):
             thisBatchLoss = 0 if len(lossesAfterUpdate) == 0 else dynet.esum(lossesAfterUpdate).value()
             currLoss = self.iLoss + thisBatchLoss
             currNrOfUpdates = self.iNrOfUpdates + len(lossesAfterUpdate)
-            self.__logger.debug("Epoch %i, Sent %i, AVG loss %.2f, AVG updates %.2f" % ( self.epochNr,
+            time = (datetime.datetime.now() - self.startTime).total_seconds()
+            self.__logger.debug("Epoch %i, Sent %i, AVG loss %.2f, AVG updates %.2f, Time %.2gs" % ( self.epochNr,
                                                                                                  self.seenSentences, 
                                                                                                  currLoss / self.seenInstances,
-                                                                                                 float(currNrOfUpdates) / self.seenInstances ))
+                                                                                                 float(currNrOfUpdates) / self.seenInstances,
+                                                                                                 time ))
                     
             self.iLoss = -thisBatchLoss
             self.iNrOfUpdates = -len(lossesAfterUpdate)
             self.seenInstances = 0
+            self.startTime = datetime.datetime.now()
              
     def __reset(self):
         self.seenSentences = 0
         self.seenInstances = 0
         self.iNrOfUpdates = 0
         self.iLoss = 0
-        self.trainEval.reset()
+        self.startTime = datetime.datetime.now()
         
+        if self.trainEval:
+            self.trainEval.reset()
+        
+
 class NDependencyParser(object):
-    def __init__(self, reprBuilder, parsingTask, lblTask, trainer):
+    def __init__(self, reprBuilder, parsingTask, lblTask, trainer, lossBatchSize=0):
         self.__logger =  logging.getLogger(self.__class__.__name__)
         
         self.__model = None
@@ -73,6 +85,7 @@ class NDependencyParser(object):
         # representations
         self.__reprBuilder = reprBuilder
         self.__trainer = trainer
+        self.__lossBatchSize = lossBatchSize
          
         self.__parser = parsingTask
         self.__labeler = lblTask
@@ -113,18 +126,7 @@ class NDependencyParser(object):
     def getParsingTask(self):
         return self.__parser
     
-    def continueTraining(self, allSentences, trainManager, epochsDone, devData = None, lossBatchSize=0, predictEvery = 20):
-        if not self.__parser.handlesNonProjectiveTrees():    
-            sentences = utils.filterNonProjective(allSentences)
-            self.__logger.info("Filtered %i non-projective trees " % (len(allSentences) - len(sentences)))
-        else:
-            sentences = allSentences
-        
-        # for logging
-        trainLogger = NNParserTrainLogger(epochsDone)
-        self.__trainOnSentences(sentences, devData, trainManager, trainLogger, lossBatchSize)
-        
-    def train(self, allSentences, trainManager, devData = None, batchSize=0, predictEvery = 20):
+    def train(self, allSentences, trainManager, devData, predictTrain):
         if not self.__parser.handlesNonProjectiveTrees():    
             sentences = utils.filterNonProjective(allSentences)
             self.__logger.info("Filtered %i non-projective trees " % (len(allSentences) - len(sentences)))
@@ -140,43 +142,45 @@ class NDependencyParser(object):
         self.__initializeParameters()
         
         # for logging
-        trainLogger = NNParserTrainLogger()
-        self.__trainOnSentences(sentences, devData, trainManager, trainLogger, batchSize)
+        trainLogger = NNParserTrainLogger(predictTrain)
+        self.__trainOnSentences(sentences, devData, trainManager, trainLogger, predictTrain)
     
     
     def predict(self, sentences, writer):
         startTime = datetime.datetime.now()
-        for i, sent in enumerate(sentences):
+        for sent in sentences:
             self.__renewNetwork()
             instance = self.__reprBuilder.buildInstance(sent)
-            predictedTree = self.__predict_tree(instance)
+            predictedTree = self.__predictTree(instance)
             writer.processTree(sent, predictedTree)
             
         endTime = datetime.datetime.now()
         self.__logger.info("Predict time: %f" % ((endTime - startTime).total_seconds()))
     
-    def __trainOnSentences(self, sentences, devData, trainManager, trainLogger, lossBatchSize):
+    def __trainOnSentences(self, sentences, devData, trainManager, trainLogger, predictTrain):
         # start training
         trainer = self.__trainer(self.__model)
-        instances = [ self.__reprBuilder.buildInstance(sent) for sent in sentences ]
-        
-        # set the correct trees
-        for instance in instances:
-            instance.correctTree = datatypes.sentence2Tree(instance.sentence)
-              
+            
         trainManager.startTraining()
-        
         while not trainManager.isEndOfTraining():
-            random.shuffle(instances)
+            random.shuffle(sentences)
+            
+            # build new instances -- all the dropouts will re-run
+            instances = [ self.__reprBuilder.buildInstance(sent) for sent in sentences ]
+     
+            # set the correct trees
+            for instance in instances:
+                instance.correctTree = datatypes.sentence2Tree(instance.sentence)
+                
+
             self.__renewNetwork()
             
             # one batch of losses
             losses = [ ]
             
-            for iId, instance in enumerate(instances):
+            for instance in instances:
                 vectors = self.__reprBuilder.prepareVectors(instance, isTraining=True)
                 
-                predictTrain = True
                 parsLosses, predictTree = self.__parser.buildLosses(vectors, instance, currentEpoch = trainManager.getCurrectEpoch(), predictTrain = predictTrain)
                 lblLosses, predictLbls = self.__labeler.buildLosses(vectors, instance, currentEpoch = trainManager.getCurrectEpoch(), predictTrain = predictTrain)
                 
@@ -186,22 +190,19 @@ class NDependencyParser(object):
                 trainLogger.finishInstance()
                 
                 losses.extend(parsLosses + lblLosses)
-                    
+
                 # update
-                if len(losses) > lossBatchSize:
-                    random.shuffle(losses)
-                    
+                if len(losses) > self.__lossBatchSize:
                     loss = dynet.esum(losses)
-                    trainLogger.finishUpdate(loss.value(), len(losses))
+                    lossValue = loss.scalar_value() # equivalent to loss.forward()
+                    trainLogger.finishUpdate(lossValue, len(losses))
                     
-                    loss.forward()
                     loss.backward()
                     trainer.update()
                         
                     losses = [ ]
                     self.__renewNetwork()
         
-                #predictedTree = self.__predict_tree(instance)
                 trainLogger.finishSentence(instance.sentence, predictTree, losses)
             
             if len(losses) > 0:        
@@ -226,7 +227,7 @@ class NDependencyParser(object):
             
         trainManager.finishTraining()
         
-    def __predict_tree(self, instance):
+    def __predictTree(self, instance):
         vectors = self.__reprBuilder.prepareVectors(instance, isTraining=False)
         predictTree = self.__parser.predict(instance, vectors)
         lbls = self.__labeler.predict(instance, predictTree, vectors)

@@ -15,12 +15,12 @@ class MaximumSpanningTreeAlgorithm(object):
     def __init__(self):
         pass
     
-    def findMSTTree(self, scores):
-        heads = self.findMSTHeads(scores)
+    def findMSTTree(self, scores, imposeOneRoot):
+        heads = self.findMSTHeads(scores, imposeOneRoot)
         return self.__buildTree(heads)
     
     @abc.abstractmethod
-    def findMSTHeads(self, scores):
+    def findMSTHeads(self, scores, imposeOneRoot):
         return
 
     @abc.abstractmethod
@@ -53,4 +53,27 @@ class SquareArrayScores(object):
         index = hId + 1
         index = index * self.length + dId + 1
         return index
+    
+class SquareListScores(object):
+    def __init__(self, length):
+        self.outputs = [ ]
+        self.scores = [ ]
+        
+        for _ in range(length):
+            scoresRow = [ None ] * length
+            outputRow = [ None ] * length
+            self.outputs.append(outputRow)
+            self.scores.append(scoresRow)
+        
+    def addScore(self, hId, dId, score):
+        self.scores[hId+1][dId+1] = score
+        
+    def getScore(self, hId, dId):
+        return self.scores[hId+1][dId+1]
+    
+    def addOutput(self, hId, dId, output):
+        self.outputs[hId+1][dId+1] = output
+        
+    def getOutput(self, hId, dId):
+        return self.outputs[hId+1][dId+1]
     

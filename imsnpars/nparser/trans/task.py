@@ -31,7 +31,7 @@ class NNTransParsingTask(NNTreeTask):
     def handlesNonProjectiveTrees(self):
         return self.__oracle.handlesNonProjectiveTrees()
     
-    def buildLosses(self, vectors, instance, currentEpoch, predictTrain = True):
+    def buildLosses(self, vectors, instance, currentEpoch, predictTrain):
         result = [ ]
        
         state = self.__tsystem.initialState(len(instance.sentence))
@@ -39,7 +39,9 @@ class NNTransParsingTask(NNTreeTask):
         cache = nparser.features.FeatOutputCache()
         while not self.__tsystem.isFinal(state):
             featReprs = self.__featReprBuilder.extractAllAndBuildFeatRepr(state, cache, vectors, isTraining=True)
+            
             netOut = self.__network.buildOutput(dynet.esum(featReprs), isTraining=True)
+            
             correctIds = self.__oracle.nextCorrectTransitions(state, instance.correctTree)
             
             # filters
@@ -58,7 +60,8 @@ class NNTransParsingTask(NNTreeTask):
             nextTransition = correctId
             if predictedId != None:
                 mainLoss = self.__network.buildLoss(netOut, correctId, predictedId)
-                result.append(mainLoss)
+                if mainLoss is not None:
+                    result.append(mainLoss)
                 
                 if self.__oracle.handlesExploration() and self.__oracle.doExploration(correctVal, predictedVal, currentEpoch):
                     nextTransition = predictedId

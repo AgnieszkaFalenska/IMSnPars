@@ -8,54 +8,13 @@ import networkx
 
 from nparser.graph.mst import gdatatypes
 
-class SquareListScores(object):
-    def __init__(self, length):
-        self.outputs = [ ]
-        self.scores = [ ]
-        
-        for _ in range(length):
-            scoresRow = [ 0.0 ] * length
-            outputRow = [ None ] * length
-            self.outputs.append(outputRow)
-            self.scores.append(scoresRow)
-        
-    def addScore(self, hId, dId, score):
-        self.scores[hId+1][dId+1] = score
-        
-    def getScore(self, hId, dId):
-        return self.scores[hId+1][dId+1]
-    
-    def addOutput(self, hId, dId, output):
-        self.outputs[hId+1][dId+1] = output
-        
-    def getOutput(self, hId, dId):
-        return self.outputs[hId+1][dId+1]
-    
-class SquareListScoresWithDims(SquareListScores):
-    def __init__(self, length):
-        super().__init__(length)
-        self.dims = [ ]
-        
-        for _ in range(length):
-            dimRow = [ None ] * length
-            self.dims.append(dimRow)
-        
-    def addDim(self, hId, dId, dim):
-        self.dims[hId+1][dId+1] = dim
-        
-    def getDim(self, hId, dId):
-        return self.dims[hId+1][dId+1]
-    
 class ChuLiuEdmonds(gdatatypes.MaximumSpanningTreeAlgorithm):
     
     def __init__(self):
         pass
         
-    def emptyScores(self, instance, dim = False):
-        if dim:
-            return SquareListScoresWithDims(len(instance.sentence) + 1)
-        
-        return SquareListScores(len(instance.sentence) + 1)
+    def emptyScores(self, instance):
+        return gdatatypes.SquareListScores(len(instance.sentence) + 1)
      
     def handlesNonProjectiveTrees(self):
         return True
@@ -64,10 +23,14 @@ class ChuLiuEdmonds(gdatatypes.MaximumSpanningTreeAlgorithm):
         graph = self.__buildInitialGraph(weights)
         return self.__runCLE(graph, len(graph.nodes()))
             
-    def findMSTHeads(self, scores):
+    def findMSTHeads(self, scores, imposeOneRoot):
+        if imposeOneRoot:
+            raise RuntimeError("ChuLiuEdmonds -- no implementation for imposing one root")
+        
         tree = self.findMST(scores.scores)
-        return self.__mstToHeads(tree)
-     
+        result = self.__mstToHeads(tree)
+        return result
+    
     def __mstToHeads(self, tree):
         heads = [ -1 ] + [ list(tree.in_edges(d))[0][0] for d in sorted(list(tree.nodes()))[1:] ]
         return heads

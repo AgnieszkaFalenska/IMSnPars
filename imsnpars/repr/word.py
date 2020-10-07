@@ -10,6 +10,8 @@ import abc
 import pickle
 import random
 
+from tools import utils
+
 class TokenReprBuilder(object):
     __metaclass__ = abc.ABCMeta
     
@@ -142,6 +144,145 @@ class WordReprBuilder(TokenReprBuilder):
         
         return wordId
     
+class ExtEmbWordReprBuilder(TokenReprBuilder):
+    def __init__(self, dim, wordDropout, embFilename, embUpdate, useNorm):
+        self.__logger =  logging.getLogger(self.__class__.__name__)
+        
+        self.__dim = dim
+        self.__vocab = { }
+        self.__wordsFreq = { }
+        self.__wordDropout = wordDropout
+        self.__embFilename = embFilename
+        self.__embUpdate = embUpdate
+        self.__extEmbeddings = None
+        self.__useNorm = useNorm
+        
+        # additional entries - root, unknown
+        self.__addEntries = 2
+        self.__lookup = None
+
+    ##
+    # word2i operations
+    
+    def addToken(self, token):
+        info = self.__getTokenInfo(token)
+        self.__addToVocab(info)
+
+    def save(self, pickleOut):
+        pickle.dump((self.__vocab, self.__wordsFreq), pickleOut)
+    
+    def load(self, pickleIn):
+        self.__vocab, self.__wordsFreq = pickle.load(pickleIn)
+    
+    def getFeatInfo(self):
+        return "EWords: %i" % len(self.__vocab)
+    
+    ##
+    # instance operations
+    
+    def initializeParameters(self, model):
+        if not self.__embUpdate and self.__embFilename:
+            assert not self.__extEmbeddings 
+            self.__addOOVWordsToDict()
+        
+        self.__lookup = model.add_lookup_parameters((len(self.__vocab) + self.__addEntries, self.__dim))
+        self.__logger.info("Setting update: %s", str(self.__embUpdate))
+        self.__lookup.set_updated(self.__embUpdate)
+            
+    def buildInstance(self, token):
+        info = self.__getTokenInfo(token)
+        return self.__vocab.get(info)
+    
+    ##
+    # vector operations
+    
+    def getDim(self):
+        return self.__dim
+    
+    def getTokenVector(self, wordId, isTraining):
+        # TODO: ugly place to put this but works with "noUpdate" option
+        if not self.__extEmbeddings and isTraining:
+            self.__readEmbeddings()
+            self.__loadEmbIntoLookup()
+        
+        if isTraining:
+            wordId = self.__wordIdWithDropout(wordId)
+            
+        if wordId == None:
+            return self.__getUnknVector()
+        else:
+            return self.__lookup[wordId]
+    
+    def getRootVector(self):
+        return self.__lookup[len(self.__vocab) + 1]
+    
+    def __getUnknVector(self):
+        return self.__lookup[len(self.__vocab)]
+    
+    def __wordIdWithDropout(self, wordId):
+        if self.__wordDropout == None or wordId == None:
+            return wordId
+        
+        dropProb = self.__wordDropout / ( self.__wordDropout + self.__wordsFreq.get(wordId))
+        if random.random() < dropProb:
+            return None
+        
+        return wordId
+    
+    def __readEmbeddings(self):
+        self.__logger.info("Reading embeddings from file: %s" % self.__embFilename)
+        self.__extEmbeddings = { }
+        for line in utils.smartOpen(self.__embFilename):
+            line = utils.decode(line)
+            parts = line.split()
+            assert len(parts) == self.__dim + 1
+            
+            try:
+                wVec = [ float(v) for v in parts[1:]]
+                self.__extEmbeddings[parts[0]] = wVec
+            except:
+                self.__logger.warn("Could not build a vector from %s" % line)
+                
+    def __loadEmbIntoLookup(self):
+        allPretrained = 0
+        for word in self.__extEmbeddings:
+            wordId = self.__vocab.get(word)
+            if wordId != None:
+                self.__lookup.init_row(wordId, self.__extEmbeddings[word])
+                allPretrained += 1
+        
+        self.__logger.info("Loaded embeddings into lookup for %i out of %i (%i)" % (allPretrained, len(self.__vocab), len(self.__extEmbeddings)))
+            
+    def __addOOVWordsToDict(self):
+        allNew = 0
+        for line in utils.smartOpen(self.__embFilename):
+            line = utils.decode(line)
+            parts = line.split()
+            assert len(parts) == self.__dim + 1
+            
+            wordId = self.__vocab.get(parts[0])
+            if wordId == None:
+                self.__addToVocab(parts[0])
+                allNew += 1
+    
+        self.__logger.info("Added %i OOV words, total dictionary %i" % (allNew, len(self.__vocab)))
+        
+    def __addToVocab(self, info, addFreq=True):
+        wId = self.__vocab.get(info, None)
+        
+        if wId == None:
+            wId = len(self.__vocab)
+            self.__vocab[info] = wId
+    
+        if self.__wordDropout:
+            if wId not in self.__wordsFreq:
+                self.__wordsFreq[wId] = 1
+            elif addFreq:
+                self.__wordsFreq[wId] += 1
+                
+    def __getTokenInfo(self, token):
+        return token.norm if self.__useNorm else token.orth 
+                
 class POSReprBuilder(TokenReprBuilder):
     def __init__(self, dim):
         self.__logger =  logging.getLogger(self.__class__.__name__)
@@ -191,10 +332,10 @@ class POSReprBuilder(TokenReprBuilder):
             return self.__lookup[posId]
     
     def getRootVector(self):
-        return self.__lookup[len(self.__pos) + 1]
+        return self.__lookup[len(self.__pos)]
     
     def __getUnknVector(self):
-        return self.__lookup[len(self.__pos)]
+        return self.__lookup[len(self.__pos) + 1]
 
 
 class MorphReprBuilder(TokenReprBuilder):
@@ -251,14 +392,15 @@ class MorphReprBuilder(TokenReprBuilder):
 
 
 class CharLstmReprBuilder(TokenReprBuilder):
-    def __init__(self, dim, lstmDim, charDropout=None, lstmDropout=None):
+    def __init__(self, dim, lstmDim, charDropout=None, lstmDropout=None, useBorders=False):
         self.__dim = dim
         self.__lstmDim = lstmDim
         self.__chars = { }
         self.__charFreq = { }
         
         # additional entries - unknown, <w>, </w>
-        self.__addEntries = 3
+        self.__addEntries = 3 if useBorders else 1
+        self.__useBorders = useBorders
         self.__lookup = None
         
         self.__forwardLstm = None
@@ -319,9 +461,8 @@ class CharLstmReprBuilder(TokenReprBuilder):
         if isTraining and self.__charDropout:
             charIds = [ self.__charIdWithDropout(cId) for cId in charIds ]
 
-        charVecs = [ self.__getBegVector() ]
-        charVecs += [ self.__lookup[cId] if cId != None else self.__getUnknCVector() for cId in charIds  ]
-        charVecs.append( self.__getEndVector() )
+        charVecs = [ self.__lookup[cId] if cId != None else self.__getUnknCVector() for cId in charIds  ]
+        charVecs = self.__addBorders(charVecs)
             
         forwardInit = self.__forwardLstm.initial_state()
         backwardInit = self.__backwardLstm.initial_state()
@@ -332,17 +473,23 @@ class CharLstmReprBuilder(TokenReprBuilder):
             
         return dynet.concatenate(result)
 
+    def __addBorders(self, charVecs):
+        if not self.__useBorders:
+            return charVecs
+        
+        return [ self.__getBegVector() ] + charVecs + [ self.__getEndVector() ]
+    
     def getRootVector(self):
         return self.__rootVec.expr()
     
     def __getBegVector(self):
-        return self.__lookup[len(self.__chars)]
-    
-    def __getEndVector(self):
         return self.__lookup[len(self.__chars) + 1]
     
-    def __getUnknCVector(self):
+    def __getEndVector(self):
         return self.__lookup[len(self.__chars) + 2]
+    
+    def __getUnknCVector(self):
+        return self.__lookup[len(self.__chars)]
     
     def __setDropout(self, isTraining):
         if not self.__dropout:

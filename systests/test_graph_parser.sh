@@ -3,7 +3,7 @@
 set -ue
 
 ## options
-D=$(readlink -f $(dirname $0))
+D=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 source $D/../scripts/get_global_vars.sh
 
 TRAIN=`readlink -ev $D/test_data/train.conllu`
@@ -17,7 +17,6 @@ DEVICE="CPU"
 
 PARSER=$IMSNPARS/imsnpars/main.py
 
-# training
 echo "Training"
 $PYTHON $PARSER \
         --dynet-devices $DEVICE \
@@ -33,8 +32,8 @@ $PYTHON $PARSER \
     	--test $DEV \
 		--contextRepr bilstm \
         --representations word,pos \
-        --labeler "graph-mtl" \
-        --output $MODEL.train.out
+        --labeler graph-mtl \
+        --output $MODEL.train.out | tee $MODEL.train.log
     	
 echo "Predicting"
 $PYTHON $PARSER \
@@ -44,8 +43,9 @@ $PYTHON $PARSER \
         --parser GRAPH \
         --format conllu \
         --test $DEV \
-    	--output $MODEL.predict.out
+    	--output $MODEL.predict.out | tee $MODEL.predict.log
     	
 echo "Comparing"
 diff $MODEL.train.out $MODEL.predict.out > $MODEL.train.diff
 echo "OK"
+

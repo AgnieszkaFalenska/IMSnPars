@@ -16,15 +16,17 @@ def addParserCmdArguments(argParser):
                 
     # options for dynamic oracle
     transArgs.add_argument("--aggresive", help="aggresive exploration for the dynamic oracle", choices=[ "True", "False" ], required=False, default="True")
-
+    
 def fillParserOptions(args, opts):
     # transition system
-    opts.system = args.system
-    opts.features = args.features.split(",")
+    opts.addOpt("system", args.system)
+    opts.addOpt("features", args.features.split(","))
             
     # oracle
-    opts.pagg = 0.1
-    opts.oracle = args.oracle
-    opts.aggresive = utils.parseBoolean(args.aggresive)
+    opts.addOpt("oracle", args.oracle)
+    
+    if opts.oracle == "dynamic":
+        opts.addOpt("pagg", 0.1)
+        opts.addOpt("aggresive", utils.parseBoolean(args.aggresive))
     
     return opts

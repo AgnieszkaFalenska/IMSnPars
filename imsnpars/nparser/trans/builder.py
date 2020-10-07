@@ -25,9 +25,9 @@ def _buildOracleAndTransSystem(opts):
          
     logging.info("Trans system used: %s" % type(tsystem))
     logging.info("Oracle used: %s" % type(anoracle))
-    logging.info("Trans-labeler used: %s" % type(transLabeler))
         
     if transLabeler != None:
+        logging.info("Trans-labeler used: %s" % type(transLabeler))
         tsystem = transLabeler
         
     return tsystem, anoracle
@@ -119,7 +119,7 @@ def buildTransParser(opts, dummyBuilder, reprBuilder):
     transExtractor = _buildFeatureExtractor(opts.features)
     
     featIds = transExtractor.getFeatIds()
-    transNetwork = nparser.network.ParserNetwork(opts.mlpHiddenDim, opts.nonLinFun, featIds)
+    transNetwork = nparser.network.ParserNetwork(opts.mlpHiddenDim, opts.nonLinFun, featIds, opts.trainMargin)
     featBuilder = nparser.features.FeatReprBuilder(transExtractor, { }, dummyBuilder, transNetwork, opts.parseLayer)
     
     parsingTask = task.NNTransParsingTask(tsystem, anoracle, transNetwork, featBuilder)

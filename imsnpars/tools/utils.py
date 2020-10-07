@@ -8,8 +8,11 @@ import logging
 import re
 import sys
 import pickle
+import gzip
 
 from tools import datatypes
+
+############################### options #########################################################
 
 class NParserOptions(object):
     def __init__(self):
@@ -30,43 +33,19 @@ class NParserOptions(object):
     def load(self, filename):
         with open(filename, 'rb') as inFile:
             stored = pickle.load(inFile)
-            self.__dict__.update(stored) 
+            self.__dict__.update(stored)
             
+    def addOpt(self, name, value, override = False):
+        if name in self.__dict__ and not override:
+            return
+        
+        self.__dict__[name] = value
+        
+        
 def parseBoolean(v):
     return v != None and v.lower() in ("yes", "true", "t", "1")
 
-def first(filterFun, elems):
-    for elem in elems:
-        if filterFun(elem):
-            return elem
-        
-    return None
-
-def decode(s):
-    # checks for python version
-    if sys.version_info.major == 2:
-        return s.decode("utf-8")
-    else:
-        return s
-    
-def encode(s):
-    # checks for python version
-    if sys.version_info.major == 2:
-        return s.encode("utf-8")
-    else:
-        return s
-    
-def buildFormatReader(fformat):
-    # format reader
-    if fformat == "conll06":
-        tokenBuilder = buildTokenFromConLL06
-    elif fformat == "conllu":
-        tokenBuilder = buildTokenFromConLLU
-    else:
-        logging.error("Unknown format: %s" % fformat)
-        exit()
-        
-    return tokenBuilder
+############################### datatypes #########################################################
 
 class ConLLToken():
     def __init__(self, tokId, orth, lemma, pos, langPos, morph, headId, dep, norm):
@@ -123,6 +102,75 @@ class ConLLToken():
         else:
             return self.norm
         
+############################### readers #########################################################
+
+class LazySentenceReader():
+    def __init__(self, f, tokenBuilder, normalizer = None):
+        self.__f = f
+        self.__el = None
+        self.__tokBuilder = tokenBuilder
+        self.__normalizer = normalizer
+        
+    def top(self):
+        return self.__el
+    
+    def next(self):
+        sentence = [ ]
+        line = self.__f.readline().strip()
+        while line:
+            tok = self.__tokBuilder(line, self.__normalizer)
+            if tok:
+                sentence.append(tok)
+            line = self.__f.readline().strip()
+            
+        self.__el = sentence
+        return sentence
+    
+class LazyTokenReader(object):
+    def __init__(self, f, tokenBuilder):
+        self.reader = LazySentenceReader(f, tokenBuilder)
+        self.__pos = None
+        
+    def top(self):
+        return self.reader.top()[self.__pos]
+    
+    def next(self):
+        if self.reader.top() == None or self.__pos >= len(self.reader.top()):
+            self.reader.next()
+            self.__pos = 0
+        
+        if not self.reader.top():
+            return None
+        
+        result = self.reader.top()[self.__pos]
+        self.__pos += 1
+        return result
+    
+    def getSent(self):
+        return self.reader.top()
+
+
+def readSentences(filename, builder, normalizer = None):
+    result = [ ]
+    reader = LazySentenceReader(open(filename), builder, normalizer)            
+    sent = reader.next()
+    while sent:
+        result.append(sent)
+        sent = reader.next()
+    return result
+        
+def buildFormatReader(fformat):
+    # format reader
+    if fformat == "conll06":
+        tokenBuilder = buildTokenFromConLL06
+    elif fformat == "conllu":
+        tokenBuilder = buildTokenFromConLLU
+    else:
+        logging.error("Unknown format: %s" % fformat)
+        exit()
+        
+    return tokenBuilder
+
 def buildTokenFromConLL06(line, normalizer = None):
     if type(line) != type([]):
         parts = line.split("\t")
@@ -154,7 +202,13 @@ def buildTokenFromConLLU(line, normalizer = None):
     if len(parts) < 10:
         raise Exception("Too short line: %s" % line)
     
-    return ConLLToken(tokId=int(parts[0]),
+    # when IDs come from ConLL09
+    if "_" in parts[0]:
+        tokId = parts[0].split("_")[1]
+    else:
+        tokId = parts[0]
+        
+    return ConLLToken(tokId=int(tokId),
                       orth = decode(parts[1]),
                       lemma = parts[2],
                       pos = parts[3],
@@ -165,36 +219,16 @@ def buildTokenFromConLLU(line, normalizer = None):
                       norm = normalizer.norm(decode(parts[1])) if normalizer != None else None)
     
 
-def buildConLL06FromToken(token):
+############################### writers #########################################################
+
+def buildConLLUFromToken(token):
     parts = token.collectParts()
     parts.append("_")
     parts.append("_")
     return "\t".join(parts)
-
-class LazySentenceReader():
-    def __init__(self, f, tokenBuilder, normalizer = None):
-        self.__f = f
-        self.__el = None
-        self.__tokBuilder = tokenBuilder
-        self.__normalizer = normalizer
-        
-    def top(self):
-        return self.__el
-    
-    def next(self):
-        sentence = [ ]
-        line = self.__f.readline().strip()
-        while line:
-            tok = self.__tokBuilder(line, self.__normalizer)
-            if tok:
-                sentence.append(tok)
-            line = self.__f.readline().strip()
-            
-        self.__el = sentence
-        return sentence
     
 class LazySentenceWriter(object):
-    def __init__(self, f, tokenToStr = buildConLL06FromToken):
+    def __init__(self, f, tokenToStr = buildConLLUFromToken):
         self.__f = f
         self.__tokenToStr = tokenToStr
         
@@ -221,7 +255,9 @@ class LazySentenceWriter(object):
             
         self.__f.write("\n")
         
-            
+
+############################### normalizers #########################################################
+
 class Normalizer(object):
     NR = '##__NUM__##'
     
@@ -247,14 +283,43 @@ class Normalizer(object):
     def __normLower(self, txt):
         return txt.lower()
 
-def readSentences(filename, builder, normalizer = None):
-    result = [ ]
-    reader = LazySentenceReader(open(filename), builder, normalizer)            
-    sent = reader.next()
-    while sent:
-        result.append(sent)
-        sent = reader.next()
-    return result
+
+def buildNormalizer(normalize):
+    if normalize:
+        return Normalizer(normalizeNumbers = True, lowercase = True)
+    else:
+        return None
+    
+############################### utils #########################################################
+
+def first(filterFun, elems):
+    for elem in elems:
+        if filterFun(elem):
+            return elem
+        
+    return None
+
+def decode(s):
+    # checks for python version
+    if sys.version_info.major == 2:
+        return s.decode("utf-8")
+    elif type(s) == bytes:
+        return s.decode("utf-8")
+    else:
+        return s
+    
+def encode(s):
+    # checks for python version
+    if sys.version_info.major == 2:
+        return s.encode("utf-8")
+    else:
+        return s
+    
+def smartOpen(f, mode = 'r'):
+    if f.endswith('.gz'):
+        return gzip.open(f, mode)
+    
+    return open(f, mode)
 
 def filterNonProjective(sentences):
     result = [ ]

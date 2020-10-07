@@ -11,12 +11,12 @@ import nparser.features
 import nparser.network
 import nparser.graph.features as gfeatures
 from nparser.graph import task, decoder
-from nparser.graph.mst import cle
+from nparser.graph.mst import fastcle # was cle
 from nparser.labels import task as ltask
 
 def buildMSTDecoder(opts, featBuilder):
     if opts.mst == "CLE":
-        mstAlg = cle.ChuLiuEdmonds()
+        mstAlg = fastcle.ChuLiuEdmonds() # was cle
         decod = decoder.FirstOrderDecoder(featBuilder)
     else:
         logging.error("Unknown algorithm: %s" % opts.mst)
@@ -78,14 +78,14 @@ def buildGraphParser(opts, dummyBuilder, reprBuilder):
     extractor = gfeatures.GraphFeatureExtractor(tokExtractors)
     
     featIds = extractor.getFeatIds() + [ feat.getFeatId() for feat in featBuilders.values() ]
-    network = nparser.network.ParserNetwork(opts.mlpHiddenDim, opts.nonLinFun, featIds)
+    network = nparser.network.ParserNetwork(opts.mlpHiddenDim, opts.nonLinFun, featIds, opts.trainMargin)
     featBuilder = nparser.features.FeatReprBuilder(extractor, featBuilders, dummyBuilder, network, opts.parseLayer)
     mstAlg, decod = buildMSTDecoder(opts, featBuilder)
     
     if opts.labeler == "graph":
         lblDict = ltask.LblTagDict()
-        parsingTask = task.NNGraphParsingTaskWithLbl(mstAlg, featBuilder, decod, network, opts.augment, lblDict)
+        parsingTask = task.NNGraphParsingTaskWithLbl(mstAlg, featBuilder, decod, network, opts.augment, lblDict, opts.imposeOneRoot)
     else:
-        parsingTask = task.NNGraphParsingTask(mstAlg, featBuilder, decod, network, opts.augment)
+        parsingTask = task.NNGraphParsingTask(mstAlg, featBuilder, decod, network, opts.augment, opts.imposeOneRoot)
     
     return parsingTask

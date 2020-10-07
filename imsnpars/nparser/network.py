@@ -11,7 +11,7 @@ import numpy as np
 from tools import neural
 
 class ParserNetwork(neural.NNetwork):
-    def __init__(self, mlpHiddenDim, nonLinFun, featIds):
+    def __init__(self, mlpHiddenDim, nonLinFun, featIds, trainMargin):
         self.__logger = logging.getLogger(self.__class__.__name__)
         
         # dimentionalities
@@ -29,7 +29,8 @@ class ParserNetwork(neural.NNetwork):
         self.__hiddenBias = None
         self.__outputW = None
         self.__outputBias = None
-        
+        self.__trainMargin = trainMargin
+     
         self.__nonLinFun = nonLinFun
         
         for featId in featIds:
@@ -41,8 +42,8 @@ class ParserNetwork(neural.NNetwork):
         # MLP parameters
         for featId in self.__paramsMlpHidLayers:
             self.__paramsMlpHidLayers[featId] = model.add_parameters((self.__mlpHiddenDim, inputDim))
-
-        self.__logger.debug("Initialize: (%i, %i)" % (outDim, self.__mlpHiddenDim))
+ 
+        self.__logger.debug("Initialize: (%i, %i, %i)" % (inputDim, self.__mlpHiddenDim, outDim))
         self.__paramsMlpHiddenBias = model.add_parameters(self.__mlpHiddenDim)
          
         # one hidden layer
@@ -68,23 +69,34 @@ class ParserNetwork(neural.NNetwork):
         return self.__hidLayers[featId] * featVec
     
     # NNetwork method
-    def buildLoss(self, output, correct, predicted = None):
-        if isinstance(predicted, np.int64):
-            predicted = predicted.item()
+    def buildLoss(self, output, correctId, predictedId = None):
+        if isinstance(predictedId, np.int64):
+            predictedId = predictedId.item()
         
-        if isinstance(correct, np.int64):
-            correct = correct.item()
+        if isinstance(correctId, np.int64):
+            correctId = correctId.item()
                     
-        if predicted == None:
-            return self.__allElemLoss(output, correct)
+        if predictedId == None:
+            return self.__allElemLoss(output, correctId)
         else:
-            return self.__oneElemLoss(output, correct, predicted)
+            return self.__oneElemLoss(output[correctId], output[predictedId])
     
-    def buildLosses(self, errors):
-        return [ dynet.rectify( 1 + pred - corr) for (pred, corr) in errors ]
+    def buildLosses(self, errOutputs):
+        result = [ ]
+        for (predOut, corrOut) in errOutputs:
+            loss = self.__oneElemLoss(corrOut, predOut)
+            if loss is not None:
+                result.append(loss)
+        return result
     
-    def __oneElemLoss(self, output, correct, predicted):
-        return dynet.rectify(1 + output[predicted] - output[correct])
+    def __oneElemLoss(self, correctOut, predictedOut):
+        if correctOut.value() < predictedOut.value() + self.__trainMargin:
+            return predictedOut - correctOut
+        
+        return None
     
-    def __allElemLoss(self, output, correct):
-        return dynet.hinge(output, correct, 1)
+    def __allElemLoss(self, output, correctId):
+        return dynet.hinge(output, correctId, self.__trainMargin)
+        
+        
+        

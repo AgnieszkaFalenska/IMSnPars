@@ -32,7 +32,7 @@ class LblTagDict(object):
                 if tok.dep not in self.__lbl2Id:
                     self.__id2lbl[len(self.__lbl2Id)] = tok.dep
                     self.__lbl2Id[tok.dep] = len(self.__lbl2Id)
-                    
+        
     def save(self, pickleOut):
         pickle.dump((self.__lbl2Id, self.__id2lbl), pickleOut)
     
@@ -62,7 +62,7 @@ class LabelerGraphTask(neural.NNTreeTask):
     def renewNetwork(self):
         self.__network.renewNetwork()
     
-    def buildLosses(self, vectors, instance, currentEpoch, predictTrain = True):
+    def buildLosses(self, vectors, instance, currentEpoch, predictTrain):
         outputsLbls = self.__buildLblOutputs(instance, instance.correctTree, vectors, isTraining=True)
         correctLbls = [ self.__lbls.getLblId(instance.correctTree.getLabel(tokPos)) for tokPos in range(instance.correctTree.nrOfTokens()) ]
         losses = self.__buildBestLosses(outputsLbls, correctLbls)
@@ -95,18 +95,19 @@ class LabelerGraphTask(neural.NNTreeTask):
             depRepr = self.__featReprBuilder.extractAndBuildFeatRepr(gfeatures.FeatId.DEP, dId, instance.sentence, vectors, isTraining)
             headRepr = self.__featReprBuilder.extractAndBuildFeatRepr(gfeatures.FeatId.HEAD, hId, instance.sentence, vectors, isTraining)
             distRepr = self.__featReprBuilder.onlyBuildFeatRepr(gfeatures.FeatId.DIST, (hId, dId), isTraining)
-                
+                   
             featRepr = headRepr + depRepr
             if distRepr != None:
                 featRepr.append(distRepr)
-                
+                   
             assert len(featRepr) == self.__featReprBuilder.getNrOfFeatures()
             featRepr = dynet.esum(featRepr)
             netOut = self.__network.buildOutput(featRepr, isTraining=isTraining)
+            
             outputs.append(netOut)
                  
         return outputs
-     
+
     def __predictLbls(self, lblOuts):
         predLbls = [ ]
         for output in lblOuts:
@@ -119,12 +120,14 @@ class LabelerGraphTask(neural.NNTreeTask):
     def __buildBestLosses(self, outputsLbls, correctLbls):
         losses = [ ]
         for (output, correct) in zip(outputsLbls, correctLbls):
-            sortedIds = np.argsort(output.value())[::-1]
-            predicted = utils.first(lambda x : x != correct, sortedIds)
-            losses.append(self.__network.buildLoss(output, correct, predicted))
+            scores = output.value()
+            predicted = max((scr, lId) for (lId, scr) in enumerate(scores) if lId != correct)[1]
+            loss = self.__network.buildLoss(output, correct, predicted)
+            if loss is not None:
+                losses.append(loss)
+
         return losses
      
-    
 class DummyLabeler(neural.NNTreeTask):
     def __init__(self, lblData = None):
         self.__lblData = lblData
@@ -147,11 +150,11 @@ class DummyLabeler(neural.NNTreeTask):
     def renewNetwork(self):
         pass
         
-    def buildLosses(self, vectors, instance, currentEpoch, predictTrain = False):
+    def buildLosses(self, vectors, instance, currentEpoch, predictTrain):
         return [ ], None
     
     def predict(self, instance, tree, vectors):
         return None
     
     def reportLabels(self):
-        return False
+        return self.__lblData is not None
