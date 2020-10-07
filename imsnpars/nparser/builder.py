@@ -15,7 +15,10 @@ import repr.builder as rbuilder
 import nparser.graph.builder as gbuilder
 import nparser.trans.builder as tbuilder
 import nparser.labels.builder as lbuilder
+import nparser.mtl.builder as mbuilder
 import nparser.labels.task as ltask
+import nparser.mtl.task as mtask
+
 
 def buildParser(opts):
     reprBuilders = rbuilder.buildReprBuilders(opts)
@@ -23,6 +26,14 @@ def buildParser(opts):
     
     dummyFeatBuilder = __buildDummyFeatBuilder(opts, sum([ rd.getDim() for rd in reprBuilders ]), contextReprBuilder.getDim())
     trainer = __buildTrainer(opts)
+    
+    if opts.parser == "MTL":
+        firstTask, secondTask = mbuilder.buildMTLParser(opts, dummyFeatBuilder, contextReprBuilder)
+        
+        firstLblTask = __buildLabeler(opts.t1Labeler, opts.firstTask, opts, dummyFeatBuilder, contextReprBuilder, firstTask)
+        secondLblTask = __buildLabeler(opts.t2Labeler, opts.secondTask, opts, dummyFeatBuilder, contextReprBuilder, secondTask)
+        
+        return mtask.DNDependencyMultitaskParser(contextReprBuilder, firstTask, secondTask, firstLblTask, secondLblTask, trainer)
     
     if opts.parser == "TRANS":
         parsingTask = tbuilder.buildTransParser(opts, dummyFeatBuilder, contextReprBuilder)

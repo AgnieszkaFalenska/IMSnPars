@@ -7,7 +7,7 @@ Created on 23.08.2018
 import logging
 import sys
 
-from repr import word, sentence, elmo
+from repr import word, sentence, stag, elmo, stack
     
 def __buildWordReprBuilder(opts):
     strDropout = str(round(opts.wordDropout, 2)) if opts.wordDropout else "None"
@@ -37,6 +37,36 @@ def __buildMorphReprBuilder(opts):
     logging.info("Building MorphReprBuilder with morphDim=%i" % opts.morphDim)
     morphBuilder = word.MorphReprBuilder(opts.morphDim)
     return morphBuilder
+
+def __buildSTagReprBuilder(opts):
+    logging.info("Building SuperTagReprBuilder with stagDim=%i" % opts.stagDim)
+    return stag.SuperTagReprBuilder(opts.stagDim)
+
+def __buildStackLblReprBuilder(opts):
+    logging.info("Building StaclLblReprBuilder with lblDim=%i" % (opts.stackLblDim))
+    lblBuilder = stack.StackLblReprBuilder(opts.stackLblDim)
+    return lblBuilder
+
+def __buildStackHeadReprBuilder(opts):
+    strDropout = str(round(opts.wordDropout, 2)) if opts.wordDropout else "None"
+    logging.info("Building StackHeadReprBuilder with wordDim=%i, wordDropout=%s" % (opts.stackHeadDim, strDropout))
+    headBuilder =  stack.StackHeadReprBuilder(opts.stackHeadDim, opts.wordDropout)
+    
+    return headBuilder
+
+def __buildStackReprBuilders(opts):
+    stackReprBuilders = [  ]
+        
+    if "lbl" in opts.stackRepr:
+        stackReprBuilders.append(__buildStackLblReprBuilder(opts))
+            
+    if "head" in opts.stackRepr:
+        stackReprBuilders.append(__buildStackHeadReprBuilder(opts))
+        
+    if "stag" in opts.stackRepr:
+        stackReprBuilders.append(__buildSTagReprBuilder(opts))
+        
+    return stackReprBuilders
 
 def __buildContextReprBuilder(opts, tokenBuilder):
     if opts.contextRepr == "bilstm":
@@ -70,6 +100,9 @@ def buildReprBuilders(opts):
     
     if "eword" in opts.representations:
         reprBuilders.append(__buildEWordReprBuilder(opts))
+        
+    if opts.stackRepr:
+        reprBuilders += __buildStackReprBuilders(opts)
         
     return reprBuilders
 

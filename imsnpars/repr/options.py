@@ -45,6 +45,14 @@ def addReprCmdArguments(argParser):
     extArgs.add_argument("--embDim", help="external embeddings dimensionality", required=False, default=300, type=int)
     extArgs.add_argument("--embLowercased", help="are embeddings lowercased", required=False, default="False", type=str)
     
+    # stack settings
+    stackArgs = argParser.add_argument_group('Stacking settings')
+    stackArgs.add_argument("--stackRepr", help="which representations to use, select a subset of [head|lbl|stag], use ',' separator", required=False)
+    stackArgs.add_argument("--stagDim", help="stag dimensionality", required=False, default=30, type=int)
+    stackArgs.add_argument("--stackLblDim", help="stacked label dimensionality", required=False, default=30, type=int)
+    stackArgs.add_argument("--stackHeadDim", help="stacked head dimensionality", required=False, default=100, type=int)
+    
+    
 def fillReprOptions(args, opts):
     ### representations
     opts.addOpt("contextRepr", args.contextRepr)
@@ -87,6 +95,20 @@ def fillReprOptions(args, opts):
         opts.addOpt("embUpdate", utils.parseBoolean(args.embUpdate))
         opts.addOpt("embDim", args.embDim)
         opts.addOpt("embLowercased", utils.parseBoolean(args.embLowercased))
+        
+    opts.addOpt("stackRepr", args.stackRepr.split(",") if args.stackRepr else None)
+    
+    ### stacking
+    if args.stackRepr:
+        ### stag
+        if "stag" in opts.stackRepr:
+            opts.addOpt("stagDim", args.stagDim)
+        
+        if "lbl" in opts.stackRepr:
+            opts.addOpt("stackLblDim", args.stackLblDim)
+            
+        if "head" in opts.stackRepr:
+            opts.addOpt("stackHeadDim", args.stackHeadDim)
     
     ### lstms
     if args.contextRepr == "bilstm":

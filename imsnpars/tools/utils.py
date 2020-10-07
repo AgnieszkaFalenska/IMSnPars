@@ -58,6 +58,10 @@ class ConLLToken():
         self.headId = headId
         self.dep = dep
         self.norm = norm
+        
+        self.stag = None
+        self.stackHead = None
+        self.stackDep = None
 
     def __str__(self):
         return "\t".join(self.collectParts())
@@ -68,6 +72,19 @@ class ConLLToken():
     
     def getId(self):
         return str(self.tokId)
+    
+    def addSuperTag(self, stag):
+        self.stag = stag
+    
+    def addStackInfo(self, stackHead, stackDep):
+        self.stackHead = stackHead
+        self.stackDep = stackDep
+            
+    def getSuperTag(self):
+        return self.stag
+    
+    def getStackInfo(self):
+        return self.stackHead, self.stackDep
     
     def __niceId(self, aId):
         if aId == None:
@@ -94,7 +111,12 @@ class ConLLToken():
             self.headId = headPos + 1
     
     def copy(self):
-        return ConLLToken(self.tokId, self.orth, self.lemma, self.pos, self.langPos, self.morph, self.headId, self.dep, self.norm)
+        result = ConLLToken(self.tokId, self.orth, self.lemma, self.pos, self.langPos, self.morph, self.headId, self.dep, self.norm)
+        
+        result.addSuperTag(self.stag)
+        result.addStackInfo(self.stackHead, self.stackDep)
+            
+        return result
     
     def getNorm(self):
         if self.norm == None:
@@ -165,6 +187,8 @@ def buildFormatReader(fformat):
         tokenBuilder = buildTokenFromConLL06
     elif fformat == "conllu":
         tokenBuilder = buildTokenFromConLLU
+    elif fformat == "conlluStack":
+        tokenBuilder = buildTokenFromConLLUStack
     else:
         logging.error("Unknown format: %s" % fformat)
         exit()
@@ -217,7 +241,23 @@ def buildTokenFromConLLU(line, normalizer = None):
                       headId = int(parts[6]) if parts[6] != '_' else None,
                       dep = parts[7],
                       norm = normalizer.norm(decode(parts[1])) if normalizer != None else None)
+
+def buildTokenFromConLLUStack(line, normalizer = None):
+    conllu = buildTokenFromConLLU(line, normalizer)
+    if not conllu:
+        return conllu
     
+    parts = line.split("\t")
+    if len(parts) < 11:
+        raise Exception("Too short line: %s" % line)
+    
+    conllu.addSuperTag(parts[10])
+    if len(parts) > 10:
+        stackHeadId = int(parts[11]) if parts[11] != '_' else None
+        stackDep = parts[12]
+        conllu.addStackInfo(stackHeadId, stackDep)
+        
+    return conllu
 
 ############################### writers #########################################################
 
@@ -226,7 +266,23 @@ def buildConLLUFromToken(token):
     parts.append("_")
     parts.append("_")
     return "\t".join(parts)
+
+def buildConLLUStackFromToken(token):
+    parts = token.collectParts()
+    parts.append("_")
+    parts.append("_")
     
+    # stag info
+    parts.append(token.getSuperTag())
+    
+    # stack info
+    stackHeadId, stackDep = token.getStackInfo()
+    parts.append("_" if stackHeadId is None else str(stackHeadId))
+    parts.append(stackDep)
+    
+    assert len(parts) == 13
+    return "\t".join(parts)
+
 class LazySentenceWriter(object):
     def __init__(self, f, tokenToStr = buildConLLUFromToken):
         self.__f = f

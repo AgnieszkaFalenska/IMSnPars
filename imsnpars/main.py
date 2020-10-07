@@ -17,7 +17,7 @@ def buildParserFromArgs():
     argParser = argparse.ArgumentParser(description="""IMS Neural Parser""", add_help=False)
     
     parserArgs = argParser.add_argument_group('parser')
-    parserArgs.add_argument("--parser", help="which parser to use", choices=[ "GRAPH", "TRANS" ], required=True)
+    parserArgs.add_argument("--parser", help="which parser to use", choices=[ "GRAPH", "TRANS", "MTL" ], required=True)
     parserArgs.add_argument("--loglevel", help="which log level to use", choices=[ "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL" ], required=False, default="DEBUG")
     
     # files
@@ -27,13 +27,14 @@ def buildParserFromArgs():
     filesArgs.add_argument("--model", help="load model from the file", type=str, required=False)
     filesArgs.add_argument("--test", help="test file", type=str, required=False)
     filesArgs.add_argument("--output", help="output predictions to the file", type=str, required=False)
+    filesArgs.add_argument("--t2Output", help="output second tasks's predictions to the file", type=str, required=False)
     filesArgs.add_argument("--save", help="save model to the file", type=str, required=False)
     filesArgs.add_argument("--saveMax", help="save the best model to the file", type=str, required=False)
     filesArgs.add_argument("--reportTrain", help="reports training accuracy", type=str, required=False, default="False")
     
     # format
     formatArgs = argParser.add_argument_group('format')
-    formatArgs.add_argument("--format", help="file format", choices=[ "conll06", "conllu" ], type=str, required=False, default="conllu")
+    formatArgs.add_argument("--format", help="file format", choices=[ "conll06", "conllu", "conlluStack" ], type=str, required=False, default="conllu")
     formatArgs.add_argument("--normalize", help="normalize the words", choices=[ "True", "False" ], type=str, required=False, default="True")
     
     # training
@@ -137,7 +138,20 @@ if __name__ == '__main__':
     if args.test != None:
         if args.output == None:
             lazyEval = evaluator.LazyTreeEvaluator()
-            parser.predict(testData, lazyEval)
-            logging.info("Test UAS=%.2f Test LAS=%.2f" % (lazyEval.calcUAS(), lazyEval.calcLAS()))
-        else:
+            
+            if args.parser == "MTL":
+                lazyT2Eval = evaluator.LazyTreeEvaluator()
+                parser.predict(testData, lazyEval, lazyT2Eval)
+                
+                logging.info("Test UAS=%.2f Test LAS=%.2f" % (lazyEval.calcUAS(), lazyEval.calcLAS()))
+                logging.info("Test T2 UAS=%.2f Test T2 LAS=%.2f" % (lazyT2Eval.calcUAS(), lazyT2Eval.calcLAS()))
+            else:
+                parser.predict(testData, lazyEval)
+                logging.info("Test UAS=%.2f Test LAS=%.2f" % (lazyEval.calcUAS(), lazyEval.calcLAS()))
+                
+        elif args.t2Output:
+            parser.predict(testData, 
+                           utils.LazySentenceWriter(open(args.output, "w")),
+                           utils.LazySentenceWriter(open(args.t2Output, "w")))
+        else:   
             parser.predict(testData, utils.LazySentenceWriter(open(args.output, "w")))

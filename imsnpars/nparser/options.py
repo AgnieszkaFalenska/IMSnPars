@@ -11,6 +11,7 @@ import sys
 import repr.options as roptions
 import nparser.trans.options as toptions
 import nparser.graph.options as goptions
+import nparser.mtl.options as moptions
 import nparser.labels.options as loptions
 
 def addCommonParserCmdArguments(argParser):
@@ -36,6 +37,8 @@ def addParserCmdArguments(parser, argParser):
         toptions.addParserCmdArguments(argParser)
     elif parser == "GRAPH":
         goptions.addParserCmdArguments(argParser)
+    elif parser == "MTL":
+        moptions.addParserCmdArguments(argParser)
     else:
         logging.error("Unknown parser: %s" % parser)
         sys.exit()
@@ -43,7 +46,6 @@ def addParserCmdArguments(parser, argParser):
     loptions.addLabelerCmdArguments(argParser)
 
 def fillCommonParserOptions(args, opts):
-    
     ## name of the parser
     opts.addOpt("parser", args.parser)
     
@@ -68,6 +70,8 @@ def fillParserOptions(args, opts):
         opts = toptions.fillParserOptions(args, opts)
     elif args.parser == "GRAPH":
         opts = goptions.fillParserOptions(args, opts)
+    elif args.parser == "MTL":
+        opts = moptions.fillParserOptions(args, opts)
     else:
         logging.error("Unknown parser: %s" % args.parser)
         sys.exit()

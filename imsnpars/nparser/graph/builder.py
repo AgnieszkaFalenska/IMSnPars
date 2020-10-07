@@ -11,12 +11,12 @@ import nparser.features
 import nparser.network
 import nparser.graph.features as gfeatures
 from nparser.graph import task, decoder
-from nparser.graph.mst import fastcle # was cle
+from nparser.graph.mst import fastcle
 from nparser.labels import task as ltask
 
 def buildMSTDecoder(opts, featBuilder):
     if opts.mst == "CLE":
-        mstAlg = fastcle.ChuLiuEdmonds() # was cle
+        mstAlg = fastcle.ChuLiuEdmonds()
         decod = decoder.FirstOrderDecoder(featBuilder)
     else:
         logging.error("Unknown algorithm: %s" % opts.mst)
