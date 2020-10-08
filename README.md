@@ -100,7 +100,7 @@ We recommend running the four first scripts before using *IMSnPars* for other pu
 
 ### Branch Specific Tests
 
-The *iwpt2020* branch comes with three additional testing scripts to check if everything works fine:
+The *iwpt2020* branch comes with four additional testing scripts to check if everything works fine:
 1. systests/test_mtl_parser.sh -- trains a new parser on small fake data and uses it for prediction. The parser is built from two models -- graph-based and transition-based -- that share intermediate representations.
 2. systests/test_stag_parser.sh -- trains two parsers -- graph-based and transition-based -- with additional supertag features
 3. systests/test_all_mtl_parsers.sh -- trains multiple MTL models with different sets of options
