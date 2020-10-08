@@ -48,7 +48,8 @@ $PYTHON $PARSER \
         --secondTask TRANS \
         --format conllu \
     	--test $DEV \
-    	--output $MODEL.predict.out
+    	--output $MODEL.predict.out \
+    	--t2Output $MODEL.predict.t2-out
 #    	
 echo "Predicting T2"
 $PYTHON $PARSER \
@@ -60,7 +61,8 @@ $PYTHON $PARSER \
         --firstTask GRAPH \
         --secondTask TRANS \
         --format conllu \
-    	--test $DEV | tee $MODEL.predict.log
+    	--test $DEV \
+    	--t2Output $MODEL.predict.t2-out | tee $MODEL.predict.log
     	
 echo "Comparing outputs of the first task"
 diff $MODEL.train.out $MODEL.predict.out
