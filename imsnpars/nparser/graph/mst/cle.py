@@ -91,7 +91,7 @@ class ChuLiuEdmonds(gdatatypes.MaximumSpanningTreeAlgorithm):
         cycleWeight = sum( graph[headC][nodeC]["weight"] for (headC, nodeC) in cycle )
         
         for node in cycleNodes:
-            graph.node[node]['in_cycle'] = cycleName
+            graph.nodes[node]['in_cycle'] = cycleName
             for h, d in graph.edges(node):
                 graph[h][d]["in_cycle"] = cycleName
         

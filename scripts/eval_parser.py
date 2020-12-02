@@ -26,9 +26,9 @@ def evalFile(corrReader, lreader, accName, evalFullLabels):
     result = lazyEval.calcAcc(accName)
 
     if info == "all":
-        print "%.2f  %.2f" % result
+        print("%.2f  %.2f" % result)
     else:
-        print "%.2f" % result
+        print("%.2f" % result)
         
 if __name__ == '__main__':
     import os, sys
@@ -43,8 +43,8 @@ if __name__ == '__main__':
     args = sys.argv[1:]
 
     if len(args) < 2:
-        print >> sys.stderr, 'Error: Missing argument!'
-        print >> sys.stderr, 'eval_parser goldFile conlluFile'
+        print('Error: Missing argument!', file=sys.stderr)
+        print('eval_parser goldFile conlluFile', file=sys.stderr)
         sys.exit()
         
     builder=utils.buildTokenFromConLLU
