@@ -1,0 +1,5 @@
+# neural network model
+dynet>=2.0.0
+networkx<2.5,>=2.1
+
+# other packages
