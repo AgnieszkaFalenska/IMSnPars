@@ -9,7 +9,7 @@ source $D/../scripts/get_global_vars.sh
 
 TRAIN=`readlink -ev $D/test_data/train.conllu`
 DEV=`readlink -ev $D/test_data/dev.conllu`
-VEC=`readlink -ev $D/test_data/test_data.fasttext.gz`
+VEC=`readlink -ev $HOME/imsnpars_data/systests/test_data.fasttext.gz`
 
 OUT=$D/out-fasttext
 mkdir -p $OUT

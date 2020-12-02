@@ -9,7 +9,7 @@ source $D/../scripts/get_global_vars.sh
 
 TRAIN=`readlink -ev $D/test_data/train.conllu`
 DEV=`readlink -ev $D/test_data/dev.conllu`
-ELMO=`readlink -ev $D/test_data/test_data.elmo.ly-2.hdf5`
+ELMO=`readlink -ev $HOME/imsnpars_data/systests/test_data.elmo.ly-2.hdf5`
 #ELMO=`readlink -ev $D/test_data/ELMo-EWT-default.hdf5`
 
 OUT=$D/out-elmo

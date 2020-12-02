@@ -38,15 +38,24 @@ Later it was extended with multi-task training for the paper [Integrating Graph-
 }
 ```
 
-## Required software
-
-> Python 3.7
-
-> [Dynet 2.0](http://dynet.io/)
-
-> [NetworkX package](https://networkx.github.io/)
-
 ## Usage
+
+### Installation 
+
+```
+# install virtual env 
+python3.6 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+
+# install imsnpars package
+pip install -r requirements.txt --use-feature=2020-resolver
+pip install -r requirements-dev.txt --use-feature=2020-resolver
+python setup.py develop -q
+
+# download test data and serialized models
+imsnpars_downloader.py
+```
 
 ### Transition-based parser
 
