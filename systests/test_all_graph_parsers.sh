@@ -4,7 +4,7 @@
 D=$(dirname $0)
 source "${D}/get_global_vars.sh"
 
-TRAIN="${D}/test_data/train_small.conllu"
+TRAIN="${D}/test_data/train_small.conllu--make-it-file"
 DEV="${D}/test_data/dev_small.conllu"
 
 OUT="${D}/out-graph"

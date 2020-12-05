@@ -1,0 +1,38 @@
+name: Python application
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-18.04
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python 3.6
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.6
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt --use-feature=2020-resolver
+        pip install -r requirements-dev.txt --use-feature=2020-resolver
+        python setup.py develop -q
+    - name: Download training data and the serialized model
+      run: |
+        imsnpars_downloader.py
+    #- name: Lint with flake8
+    #  run: |
+    #    flake8 --ignore=F401 --exclude=$(grep -v '^#' .gitignore | xargs | sed -e 's/ /,/g')
+    #- name: Unit Test with pytest
+    #  run: |
+    #    pytest
+    - name: System tests
+      run: |
+        systests/test_trans_parser.sh
+        systests/test_graph_parser.sh
+        systests/test_fasttext_parser.sh
+        systests/test_elmo_parser.sh
+    #    systests/test_all_trans_parsers.sh
+    #    systests/test_all_graph_parsers.sh
