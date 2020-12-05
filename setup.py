@@ -1,16 +1,16 @@
 from setuptools import setup
+import m2r
 
 
-def read(fname):
-    import os
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+def get_readme():
+    return m2r.parse_from_file('README.md')
 
 
 setup(name='imsnpars',
       version='0.3.4',
       description=' IMS Neural Dependency Parser',
-      long_description=read('README.md'),
-      long_description_content_type='text/markdown',
+      long_description=get_readme(),
+      long_description_content_type='text/x-rst',
       url='https://github.com/AgnieszkaFalenska/IMSnPars',
       author='Agnieszka Faleńska',
       author_email='agnieszka.falenska@ims.uni-stuttgart.de',
