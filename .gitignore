@@ -106,7 +106,4 @@ venv.bak/
 ./.pydevproject
 .project
 .pydevproject
-./systests/out-graph/
-./systests/out-trans/
-systests/out-trans/
-systests/out-graph/
+systests/out-*/*
