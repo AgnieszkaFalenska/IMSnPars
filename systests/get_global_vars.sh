@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
+DIR=$(dirname $0)
 
 export IMSNPARS=$DIR/../
 export PARS_SEED=688732396

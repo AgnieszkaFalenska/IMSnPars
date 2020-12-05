@@ -1,24 +1,20 @@
 #!/bin/bash
 
-set -ue
+# options
+D=$(dirname $0)
+source "${D}/get_global_vars.sh"
 
-## options
-D=$(readlink -f $(dirname $0))
-
-source $D/../scripts/get_global_vars.sh
-
-TRAIN=`readlink -ev $D/test_data/train.conllu`
-DEV=`readlink -ev $D/test_data/dev.conllu`
-ELMO=`readlink -ev $HOME/imsnpars_data/systests/test_data.elmo.ly-2.hdf5`
+TRAIN="${D}/test_data/train_small.conllu"
+DEV="${D}/test_data/dev_small.conllu"
+ELMO="${HOME}/imsnpars_data/systests/test_data.elmo.ly-2.hdf5"
 #ELMO=`readlink -ev $D/test_data/ELMo-EWT-default.hdf5`
 
-OUT=$D/out-elmo
-mkdir -p $OUT
+OUT="${D}/out-elmo"
+mkdir -p "${OUT}"
 
 DEVICE="CPU"
-
-PARSER=$IMSNPARS/imsnpars/main.py
-MODEL=$OUT/test_elmo.model
+MODEL="${OUT}/test_elmo.model"
+PARSER="${IMSNPARS}/imsnpars/main.py"
 
 echo "Training"
 $PYTHON $PARSER --parser TRANS \

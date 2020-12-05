@@ -1,23 +1,19 @@
 #!/bin/bash
 
-set -ue
+# options
+D=$(dirname $0)
+source "${D}/get_global_vars.sh"
 
-## options
-D=$(readlink -f $(dirname $0))
+TRAIN="${D}/test_data/train_small.conllu"
+DEV="${D}/test_data/dev_small.conllu"
+VEC="${HOME}/imsnpars_data/systests/test_data.fasttext.gz"
 
-source $D/../scripts/get_global_vars.sh
-
-TRAIN=`readlink -ev $D/test_data/train.conllu`
-DEV=`readlink -ev $D/test_data/dev.conllu`
-VEC=`readlink -ev $HOME/imsnpars_data/systests/test_data.fasttext.gz`
-
-OUT=$D/out-fasttext
-mkdir -p $OUT
+OUT="${D}/out-fasttext"
+mkdir -p "${OUT}"
 
 DEVICE="CPU"
-
-PARSER=$IMSNPARS/imsnpars/main.py
-MODEL=$OUT/test_fasttext.model
+MODEL="${OUT}/test_fasttext.model"
+PARSER="${IMSNPARS}/imsnpars/main.py"
 
 echo "Training"
 $PYTHON $PARSER --parser TRANS \
