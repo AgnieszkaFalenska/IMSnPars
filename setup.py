@@ -18,7 +18,8 @@ setup(name='imsnpars',
       packages=['imsnpars'],
       install_requires=[
           'dynet>=2.0.0',
-          'networkx<2.5,>=2.1'
+          'networkx<2.5,>=2.1',
+          'h5py>=3.1.0'
       ],
       scripts=[
           "scripts/imsnpars_downloader.py"
