@@ -7,7 +7,7 @@ def get_readme():
 
 
 setup(name='imsnpars',
-      version='0.3.4',
+      version='0.3.0',
       description=' IMS Neural Dependency Parser',
       long_description=get_readme(),
       long_description_content_type='text/x-rst',
