@@ -21,7 +21,7 @@ jobs:
         python setup.py develop -q
     - name: Download training data and the serialized model
       run: |
-        imsnpars_downloader.py
+        imsnpars_downloader.py --systests
     #- name: Lint with flake8
     #  run: |
     #    flake8 --ignore=F401 --exclude=$(grep -v '^#' .gitignore | xargs | sed -e 's/ /,/g')
