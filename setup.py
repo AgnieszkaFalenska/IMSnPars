@@ -21,7 +21,7 @@ setup(name='imsnpars',
           'networkx<2.5,>=2.1'
       ],
       scripts=[
-          "scripts/download.py"
+          "scripts/imsnpars_downloader.py"
       ],
       python_requires='>=3.6',
       zip_safe=False)
