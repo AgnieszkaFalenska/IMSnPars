@@ -7,11 +7,11 @@ def read(fname):
 
 
 setup(name='imsnpars',
-      version='0.3.0',
+      version='0.3.4',
       description=' IMS Neural Dependency Parser',
       long_description=read('README.md'),
       long_description_content_type='text/markdown',
-      url='http://github.com/ulf1/dynet-imsnpars-hdt',
+      url='https://github.com/AgnieszkaFalenska/IMSnPars',
       author='Agnieszka Faleńska',
       author_email='agnieszka.falenska@ims.uni-stuttgart.de',
       license='Apache License 2.0',
