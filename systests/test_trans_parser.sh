@@ -1,25 +1,20 @@
 #!/bin/bash
 
-set -ue
+# options
+D=$(dirname $0)
+source "${D}/get_global_vars.sh"
 
-## options
-D=$(readlink -f $(dirname $0))
-source $D/../scripts/get_global_vars.sh
+TRAIN="${D}/test_data/train_small.conllu"
+DEV="${D}/test_data/dev_small.conllu"
 
-TRAIN=`readlink -ev $D/test_data/train.conllu`
-DEV=`readlink -ev $D/test_data/dev.conllu`
-
-OUT=$D/out-trans
-mkdir -p $OUT
+OUT="${D}/out-trans"
+mkdir -p "${OUT}"
 
 DEVICE="CPU"
-
-
-PARSER=$IMSNPARS/imsnpars/main.py
+MODEL="${OUT}/test_trans.model"
+PARSER="${IMSNPARS}/imsnpars/main.py"
 
 echo "Training"
-MODEL=$OUT/test_trans.model
-
 $PYTHON -u $PARSER \
         --dynet-devices $DEVICE \
         --dynet-seed $DYNET_SEED \
